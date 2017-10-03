@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+from .models import Hepg2
 
 # Create your views here.
 
@@ -18,7 +19,8 @@ def test_results(request, tf1, tf2, cell, maxdistance, pvalue, tail_size,
     # I need four boolean values
     if type(which_tests) is not list and 1 <= len(which_tests) <= 4 \
             and any([type(item) is not bool for item in which_tests]):
-        raise TypeError('Test list is not of the correct type')
+        raise Http404('Test list is not of the correct type')
+    test_results = Hepg2.objects.all() # Must be updated with actual query
     response = 'The test on TFs %s and %s in cell line %s gives\n ' \
                'the following results:\n' \
                'maxdistance: %d\n' \
