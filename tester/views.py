@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .models import Hepg2
+from .utils import check_tf
 
 # Create your views here.
 
@@ -25,5 +26,6 @@ def test_results(request):
         'which_tests': list(map(lambda s: s.replace('wants_', ''), request.GET.getlist('which_tests'))),
         'min_test_num': request.GET['min_test_num'],
         'pvalue': request.GET['pvalue'],
+        'result': check_tf('ARID3A',2200,'not_used',0,0,1,4,['average', 'mad', 'median', 'tail_1000']),
     }
     return render(request, 'tester/test_results.html', context)
