@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title >TICA v2 PROTOTYPE TESTER - PARAMETERS</title>
+    <!-- <link rel="stylesheet" type="text/css" href="css/Marathon1-team_css.css"> -->
+</head>
+<body>
+    <h1>TICA v2 PROTOTYPE TESTER - PARAMETERS</h1>
+    <p>This is a mock main page for testing using TICA_v2.</p>
+    <form action="{% url 'tester:test_results' %}" method="get">
+    {% csrf_token %}
+        <ul>
+            <li>TF1: <input type="text" name="tf1"/> </li>
+            <li>TF2: <input type="text" name="tf2"/> </li>
+            <li>Cell: <input type="text" name="cell"/> </li>
+            <li>Max distance: <br>
+                <input type="radio" name="maxdist" value=1000 /> 1000bp <br>
+                <input type="radio" name="maxdist" value=2000 /> 2000bp <br>
+                <input type="radio" name="maxdist" value=2200 /> 2200bp <br>
+                <input type="radio" name="maxdist" value=4000 /> 4000bp <br></li>
+            <li>How many mindistance couples are needed? <input type="number" name="num_min"/> </li>
+            <li>Fraction of couples colocating in a promoter? [0,1] <input type="text" name="num_min_w_tsses"/> </li>
+            <li>Which tests do you want to use?  <br>
+                <input type="checkbox" name="which_tests" value="wants_average"/> Average <br>
+                <input type="checkbox" name="which_tests" value="wants_median"/> Median <br>
+                <input type="checkbox" name="which_tests" value="wants_mad"/> Median Absolute Deviation <br>
+                <input type="checkbox" name="which_tests" value="wants_rts"/> Right Tail size (1000bp only) <br></li>
+            <li>How many tests should be passed? <input type="number" name="min_test_num"/> </li>
+            <li>pvalue:  <br>
+                <input type="radio" name="pvalue" value=0.01 /> 0.01 <br>
+                <input type="radio" name="pvalue" value=0.05 /> 0.05 <br>
+                <input type="radio" name="pvalue" value=0.1 /> 0.1 <br>
+                <input type="radio" name="pvalue" value=0.2 /> 0.2 <br></li>
+        </ul>
+        <br>
+        <input type="submit" value="Test" />
+</form>
+    <hr>
+    <a href="{% url 'home:index' %}">Go back to home</a>
+</body>

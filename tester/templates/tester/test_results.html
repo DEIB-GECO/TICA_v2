@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title >TICA v2 PROTOTYPE TESTER - TEST RESULTS</title>
+    <!-- <link rel="stylesheet" type="text/css" href="css/Marathon1-team_css.css"> -->
+</head>
+<body>
+    <h1>TICA v2 PROTOTYPE TESTER - TEST RESULTS</h1>
+    <p>This is a mock main page for displaying test results using TICA_v2.</p>
+    <p>Testing on {{ tf1 }} and {{ tf2 }} on cell line {{ cell }} returned the following results:<br>
+    <ul>
+        <li>Max_distance: {{ maxdist }} </li>
+        <li>Minimum number of couples: {{ num_min }} </li>
+        <li>Minimum number of couples with TSSes: {{ num_min_w_tsses }} </li>
+        <li>Minimum number of mindist couples: {{ num_min }} </li>
+        <li>Minimum fraction of mindist couples colocating in a promoter: {{ num_min_w_tsses }} </li>
+        <li>Max_distance: {{ maxdist }} </li>
+        <li>Tests done: {{ which_tests }} </li>
+        <li>p value of individual tests: {{ p_value }} </li>
+        <li>Number of rejects needed: {{ min_test_num }}</li>
+    </ul>
+    Test result: TBD.</p>
+    <hr>
+    <a href="{% url 'tester:param_input' %}">Another test</a> <br>
+    <a href="{% url 'home:index' %}">Go back to home</a>
+</body>

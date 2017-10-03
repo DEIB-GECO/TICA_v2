@@ -1,33 +1,29 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404
 from .models import Hepg2
 
 # Create your views here.
 
-test_correspondence = {0:'average',
-                       1:'median',
-                       2:'mad',
-                       3:'tail_size'}
 
 
 def param_input(request):
-    return HttpResponse("This is a mock main page for testing using TICA_v2.")
+    return render(request, "tester/param_input.html")
 
 
-def test_results(request, tf1, tf2, cell, maxdistance, pvalue, tail_size,
-         which_tests, min_test_num):
+def test_results(request):
     # I need four boolean values
-    if type(which_tests) is not list and 1 <= len(which_tests) <= 4 \
-            and any([type(item) is not bool for item in which_tests]):
-        raise Http404('Test list is not of the correct type')
+    # if type(request.GET['which_tests']) is not list and 1 <= len(request.GET['which_tests'],) <= 4 \
+    #         and any([type(item) is not bool for item in request.GET['which_tests']]):
+    #     raise Http404('Test list is not of the correct type')
     test_results = Hepg2.objects.all() # Must be updated with actual query
-    response = 'The test on TFs %s and %s in cell line %s gives\n ' \
-               'the following results:\n' \
-               'maxdistance: %d\n' \
-               'tests used: %s\n' \
-               'pvalue: %f\n' \
-               'test rejects needed: at least %d\n' \
-               'result: TBD'
-    return HttpResponse(response % (tf1, tf2, cell, maxdistance,
-                     map(lambda t: test_correspondence[t], which_tests),
-                     pvalue, min_test_num))
+    context = {
+        'tf1': request.GET['tf1'],
+        'tf2': request.GET['tf2'],
+        'cell': request.GET['cell'],
+        'maxdist': request.GET['maxdist'],
+        'num_min': request.GET['num_min'],
+        'num_min_w_tsses': float(request.GET['num_min_w_tsses']),
+        'which_tests': list(map(lambda s: s.replace('wants_', ''), request.GET.getlist('which_tests'))),
+        'min_test_num': request.GET['min_test_num'],
+        'pvalue': request.GET['pvalue'],
+    }
+    return render(request, 'tester/test_results.html', context)
