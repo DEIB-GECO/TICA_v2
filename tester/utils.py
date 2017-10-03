@@ -39,40 +39,56 @@ def calculate_null() :
 #LAZY VAL
 calculated_null = calculate_null()
 def get_all_tfs() :
-    return list(Hepg2.objects.values_list('tf1',flat=True).distinct())
+    logger.warning('all_tfs is ready')
+    #we need to optimize this
+    return list(Hepg2.objects.values_list('tf1',flat=True).distinct()) + list(Hepg2.objects.values_list('tf2',flat=True).distinct())
 
 #lazy val
-all_tfs = get_all_tfs()
+all_tfs = sorted(list(set(get_all_tfs())))
 
 
 
 #for now tail size = 1000
 #for now p values are 1,5,10,20
-def check_tf(tf_in, maxd, tail_size, min_tss, min_count, p_value, min_num_true_test):
+#test_list =  ['average', 'mad', 'median', 'tail_1000']
+#example usage -> check_tf('ARID3A',2200,'not_used',0,0,1,4,['average', 'mad', 'median', 'tail_1000'])
+def check_tf(tf_in, maxd, tail_size, min_tss, min_count, p_value, min_num_true_test, test_list):
     temp_null = calculated_null[maxd]
     result = []
     for tf in all_tfs:
         if(tf == tf_in):
-            pass
+            continue
         tf1 = tf_in
         tf2 = tf
         if(tf1 > tf2) :
             tf1 = tf
             tf2 = tf_in
+        # print(tf1)
+        # print(tf2)
+
         # contains the max line less then or equel to maxd
+        #TODO we can select all together, this will be faster
         line = Hepg2.objects.filter(tf1=tf1).filter(tf2=tf2).filter(cumulative_count_all__lte = maxd).order_by('-distance').first()
         line_null = Hepg2Null.objects.filter(tf1=tf1).filter(tf2=tf2).filter(max_distance = maxd).values().first()
 
+
+        if(line is None):
+            continue
+
+
         if(line.cumulative_count_all < min_count):
-            pass
+            continue
         if (line.cumulative_count_tss/line.cumulative_count_all < min_tss):
-            pass
+            continue
 
 
         passed = []
-        for i in ['average', 'mad', 'median', 'tail_1000']:
+        for i in test_list:
             test_name = i + "-" + str(p_value)
             null_value = temp_null[test_name]
+            if(line_null[i] is None):
+                continue
+            #TODO check correctness
             if(line_null[i] >= null_value ):
                 passed.append(i)
         if(min_num_true_test <= len(passed)):
