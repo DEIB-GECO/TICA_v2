@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     # ex: /home/
-    url(r'^$', views.param_input, name='index'),
+    url(r'^param_input/$', views.param_input, name='index'),
     # ex: /home/test
     url(r'^test_results/$', views.test_results, name='test')
 ]
