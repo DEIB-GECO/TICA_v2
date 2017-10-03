@@ -27,6 +27,7 @@ class Hepg2(models.Model):
     count_all = models.IntegerField()
     count_tss = models.IntegerField()
     cumulative_count_all = models.IntegerField()
+    cumulative_count_tss = models.IntegerField()
 
     class Meta:
         managed = False
@@ -60,12 +61,12 @@ class Hepg2Null(models.Model):
         unique_together = (('tf1', 'tf2', 'max_distance'),)
 
 
-# class Hepg2Temp(models.Model):
-#     tf1 = models.CharField(max_length=20)
-#     tf2 = models.CharField(max_length=20)
-#     dist = models.IntegerField()
-#     is_tss = models.IntegerField()
-#
-#     class Meta:
-#         managed = False
-#         db_table = 'hepg2_temp'
+class Hepg2Temp(models.Model):
+    tf1 = models.CharField(max_length=20)
+    tf2 = models.CharField(max_length=20)
+    dist = models.IntegerField()
+    is_tss = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'hepg2_temp'
