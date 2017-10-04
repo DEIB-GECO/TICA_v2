@@ -12,7 +12,6 @@
     {% csrf_token %}
         <ul>
             <li>TF1: <input type="text" name="tf1"/> </li>
-            <li>TF2: <input type="text" name="tf2"/> </li>
             <li>Cell: <input type="text" name="cell"/> </li>
             <li>Max distance: <br>
                 <input type="radio" name="maxdist" value=1100 /> 1100bp <br>
@@ -25,7 +24,7 @@
                 <input type="checkbox" name="which_tests" value="wants_average"/> Average <br>
                 <input type="checkbox" name="which_tests" value="wants_median"/> Median <br>
                 <input type="checkbox" name="which_tests" value="wants_mad"/> Median Absolute Deviation <br>
-                <input type="checkbox" name="which_tests" value="wants_rts"/> Right Tail size (1000bp only) <br></li>
+                <input type="checkbox" name="which_tests" value="wants_tail_1000"/> Right Tail size (1000bp only) <br></li>
             <li>How many tests should be passed? <input type="number" name="min_test_num"/> </li>
             <li>pvalue:  <br>
                 <input type="radio" name="pvalue" value=1 /> 0.01 <br>

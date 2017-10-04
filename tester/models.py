@@ -34,6 +34,11 @@ class Hepg2(models.Model):
         db_table = 'hepg2'
         unique_together = (('tf1', 'tf2', 'distance'),)
 
+    def __str__(self):
+        return '%s_%s_%d_%d_%d_%d_%d' % (
+            self.tf1, self.tf2, self.distance,self.count_all,self.count_tss,self.cumulative_count_all, self.cumulative_count_tss
+        )
+
 
 class Hepg2Null(models.Model):
     tf1 = models.CharField(primary_key=True, max_length=20)
@@ -59,6 +64,9 @@ class Hepg2Null(models.Model):
         managed = False
         db_table = 'hepg2_null'
         unique_together = (('tf1', 'tf2', 'max_distance'),)
+
+    def __str__(self):
+        return ''
 
 
 class Hepg2Temp(models.Model):

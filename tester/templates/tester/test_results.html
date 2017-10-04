@@ -1,8 +1,11 @@
+{% load render_table from django_tables2 %}
+{% load static %}
 <!doctype html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <title >TICA v2 PROTOTYPE TESTER - TEST RESULTS</title>
+    <link rel="stylesheet"  href="{% static 'django_tables2/themes/paleblue/css/screen.css' %}" />
     <!-- <link rel="stylesheet" type="text/css" href="css/Marathon1-team_css.css"> -->
 </head>
 <body>
@@ -20,7 +23,7 @@
         <li>p value of individual tests: {{ p_value }} </li>
         <li>Number of rejects needed: {{ min_test_num }}</li>
     </ul>
-    Test result: {{ result }}.</p>
+    {% render_table table %}
     <hr>
     <a href="{% url 'tester:param_input' %}">Another test</a> <br>
     <a href="{% url 'home:index' %}">Go back to home</a>

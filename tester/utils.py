@@ -68,11 +68,11 @@ def check_tf(tf_in, maxd, tail_size, min_tss, min_count, p_value, min_num_true_t
         # print(tf1)
         # print(tf2)
 
-        # contains the max line less then or equel to maxd
+        # contains the max line less then or equal to maxd
         #TODO we can select all together, this will be faster
-        line = Hepg2.objects.filter(tf1=tf1).filter(tf2=tf2).filter(cumulative_count_all__lte = maxd).order_by('-distance').first()
-        line_null = Hepg2Null.objects.filter(tf1=tf1).filter(tf2=tf2).filter(max_distance = maxd).values().first()
-
+        line = Hepg2.objects.filter(tf1=tf1).filter(tf2=tf2).filter(distance__lte=maxd).order_by('-distance').first()
+        # why??
+        line_null = Hepg2Null.objects.filter(tf1=tf1).filter(tf2=tf2).filter(max_distance=maxd).values().first()
 
         if(line is None):
             continue
@@ -83,18 +83,21 @@ def check_tf(tf_in, maxd, tail_size, min_tss, min_count, p_value, min_num_true_t
         if (line.cumulative_count_tss/line.cumulative_count_all < min_tss):
             continue
 
-
+        # start stat testing
         passed = []
+        scores = {}
         for i in test_list:
             test_name = i + "-" + str(p_value)
             null_value = temp_null[test_name]
             if(line_null[i] is None):
                 continue
             #TODO check correctness
-            if(line_null[i] >= null_value ):
+            if(line_null[i] <= null_value ):
                 passed.append(i)
+            scores[i] = line_null[i]
         if(min_num_true_test <= len(passed)):
-            result.append((tf,passed))
+            scores['name'] = tf
+            result.append(scores)
 
 
     # result is list of tuples first element is name of tf and second one is passed test
