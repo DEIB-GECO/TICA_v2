@@ -2,6 +2,7 @@ from django.shortcuts import render
 from .models import Hepg2
 from .utils import check_tf
 import django_tables2 as tables
+from django_tables2 import RequestConfig
 
 # Create your views here.
 
@@ -43,6 +44,17 @@ def test_results(request):
     pvalue = int(request.GET['pvalue'])
     num_min = int(request.GET['num_min'])
     num_min_w_tsses = float(request.GET['num_min_w_tsses'])
+    table = NameTable(
+        check_tf(tf1,
+                 maxdist,
+                 'not_used',
+                 num_min_w_tsses,
+                 num_min,
+                 pvalue,
+                 min_test_num,
+                 wanted_tests)
+    )
+    RequestConfig(request).configure(table)
     context = {
         'tf1': tf1,
         'cell': request.GET['cell'],
@@ -52,15 +64,6 @@ def test_results(request):
         'which_tests': list(map(lambda s: s.replace('wants_', ''), request.GET.getlist('which_tests'))),
         'min_test_num': min_test_num,
         'pvalue': pvalue,
-        'table' : NameTable(
-            check_tf(tf1,
-                     maxdist,
-                     'not_used',
-                     num_min_w_tsses,
-                     num_min,
-                     pvalue,
-                     min_test_num,
-                     wanted_tests)
-        ),
+        'table' : table,
     }
     return render(request, 'tester/test_results.html', context)
