@@ -26,6 +26,7 @@ def test_results(request):
 
         class Meta():
             exclude = not_shown
+            attrs = {'class': 'paleblue'}
 
 
 
