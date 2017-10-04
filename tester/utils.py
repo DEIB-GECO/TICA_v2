@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_null() :
-    nullpd = pd.DataFrame(list(Hepg2Null.objects.exclude(average__isnull=True).values()))
+    #TODO make this list reading from database
+    include_list = ['ARID3A', 'ATF4', 'BHLHE40', 'BRCA1', 'CEBPB', 'CEBPD', 'CHD2', 'CREM', 'CTCF', 'DNMT3B', 'DROSHA', 'ELF1', 'EP300', 'ETV4', 'EZH2', 'FOSL2', 'FOXA1', 'FOXA2', 'FOXK2', 'GABPA', 'GATA4', 'GTF2F1', 'HCFC1', 'HDAC2', 'HHEX', 'HLF', 'HNF1A', 'HNF4A', 'HNF4G', 'HNRNPLL', 'HSF1', 'IKZF1', 'IRF3', 'JUND', 'JUN', 'KAT2B', 'MAFF', 'MAX', 'MAZ', 'MBD4', 'MNT', 'MXI1', 'MYBL2', 'MYC', 'NFE2L2', 'NFIC', 'NR2C2', 'NR2F6', 'NRF1', 'PLRG1', 'POLR2A', 'POLR2AphosphoS2', 'POLR2AphosphoS5', 'RAD21', 'RAD51', 'RCOR1', 'REST', 'RFX5', 'RNF2', 'RXRA', 'SIN3A', 'SIN3B', 'SMC3', 'SOX13', 'SP1', 'SREBF1', 'SUZ12', 'TAF1', 'TBP', 'TCF7L2', 'TCF7', 'TEAD4', 'TFAP4', 'USF1', 'USF2', 'YBX1', 'YY1', 'ZBTB40', 'ZBTB7A', 'ZHX2', 'ZKSCAN1', 'ZMYM3', 'ZNF143', 'ZNF207', 'ZNF274', 'ZNF384']
+    nullpd = pd.DataFrame(list(Hepg2Null.objects.filter(tf1__in=include_list).filter(tf2__in=include_list).exclude(average__isnull=True).values()))
 
     max_distances = sorted(nullpd.reset_index()['max_distance'].unique())
 
