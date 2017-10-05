@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .models import Hepg2
 from .utils import check_tf
+from .forms import ParameterForm
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 
@@ -9,13 +10,14 @@ from django_tables2 import RequestConfig
 
 
 def param_input(request):
-    return render(request, "tester/param_input.html")
+    form = ParameterForm()
+    return render(request, "tester/param_input.html", {'form': form})
 
 
 def test_results(request):
 
     all_fields = set(['average','median', 'mad', 'tail_1000'])
-    wanted_tests = list(map(lambda s: s.replace('wants_', ''), request.GET.getlist('which_tests')))
+    wanted_tests = list(map(lambda s: s.replace('wants_', ''), request.POST.getlist('which_tests')))
     not_shown = list(all_fields.difference(set(wanted_tests)))
 
     class NameTable(tables.Table):
@@ -38,15 +40,15 @@ def test_results(request):
     #     raise Http404('Test list is not of the correct type')
     test_results = Hepg2.objects.all() # Must be updated with actual query
 
-    tf1 = request.GET['tf1']
-    maxdist = int(request.GET['maxdist'])
-    min_test_num = int(request.GET['min_test_num'])
-    pvalue = int(request.GET['pvalue'])
-    num_min = int(request.GET['num_min'])
-    num_min_w_tsses = float(request.GET['num_min_w_tsses'])
+    tf1 = request.POST['tf1']
+    max_dist = int(request.POST['max_dist'])
+    min_test_num = int(request.POST['min_test_num'])
+    pvalue = int(request.POST['pvalue'])
+    num_min = int(request.POST['num_min'])
+    num_min_w_tsses = float(request.POST['num_min_w_tsses'])
     table = NameTable(
         check_tf(tf1,
-                 maxdist,
+                 max_dist,
                  'not_used',
                  num_min_w_tsses,
                  num_min,
@@ -57,11 +59,11 @@ def test_results(request):
     RequestConfig(request).configure(table)
     context = {
         'tf1': tf1,
-        'cell': request.GET['cell'],
-        'maxdist': maxdist,
+        'cell': request.POST['cell'],
+        'maxdist': max_dist,
         'num_min': num_min,
         'num_min_w_tsses': num_min_w_tsses,
-        'which_tests': list(map(lambda s: s.replace('wants_', ''), request.GET.getlist('which_tests'))),
+        'which_tests': wanted_tests,
         'min_test_num': min_test_num,
         'pvalue': pvalue,
         'table' : table,
