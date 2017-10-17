@@ -48,6 +48,9 @@ def get_all_tfs() :
 #lazy val
 all_tfs = sorted(list(set(get_all_tfs())))
 
+def get_tf_list(cell):
+    return all_tfs
+
 
 
 #for now tail size = 1000

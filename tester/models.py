@@ -78,3 +78,9 @@ class Hepg2Temp(models.Model):
     class Meta:
         managed = False
         db_table = 'hepg2_temp'
+
+
+class EncodeFormModel(models.Model):
+    cell = models.CharField(max_length=20)
+    method = models.CharField(max_length=20)
+    tf1 = models.CharField(max_length=20)
