@@ -36,6 +36,27 @@ class EncodeParameterForm(forms.ModelForm):
         self.fields['tf2'].choices = [(x, x) for x in get_tf_list(cell)]
         self.fields['which_tests'].empty_label = None
 
+class MyDataEncodeParameterForm(forms.ModelForm):
+    class Meta:
+        model = MyDataEncodeFormModel
+        fields = '__all__'
+
+        widgets = {
+            'cell': forms.HiddenInput(),
+            'method': forms.HiddenInput(),
+            'session_id' : forms.HiddenInput(),
+        }
+
+        labels = {
+            'mydata' : 'Upload your dataset here',
+        }
+
+
+    def set_initial_values(self, cell, method, session_id):
+        self.fields['cell'].initial = cell
+        self.fields['method'].initial = method
+        self.fields['session_id'].initial = session_id
+
 
 
 class CellMethodForm(forms.Form):

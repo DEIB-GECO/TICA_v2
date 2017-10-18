@@ -252,3 +252,11 @@ class EncodeFormModel(models.Model):
     which_tests = models.CharField(max_length=20,choices=TESTS, blank=False, null=False, default=1)
     min_test_num = models.IntegerField()
     pvalue = models.IntegerField(choices=P_VALUES, default=1)
+
+
+
+class MyDataEncodeFormModel(models.Model):
+    cell = models.CharField(max_length=20)
+    method = models.CharField(max_length=20)
+    session_id = models.CharField(max_length=100)
+    mydata = models.FileField(upload_to='uploaded/')

@@ -1,13 +1,18 @@
 from django.shortcuts import render
-from .models import *
 from .utils import check_tf
-from .forms import EncodeParameterForm, CellMethodForm
+from .forms import *
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 import os
 import time
 
 # Create your views here.
+def create_session_id(request):
+    ip = str(request.META.get('REMOTE_ADDR'))
+    ts = str(time.time())
+
+    return (ip + "_" + ts).replace('.','_')
+
 
 def index(request):
     greeting_message = "This is a mock main page for TICA v2 site. " \
@@ -30,7 +35,8 @@ def param_input(request):
     if method == 'encode':
         form = EncodeParameterForm(cell,method)
     elif method == 'mydata_encode':
-        pass
+        form = MyDataEncodeParameterForm()
+        form.set_initial_values(cell,method,create_session_id(request))
     elif method == 'mydata_mydata':
         pass
 
@@ -45,6 +51,29 @@ def child(session_id):
 
 
 def test_results(request):
+    method = request.POST['method']
+    if method == 'encode':
+        return test_results_encode(request)
+    elif method == 'mydata_encode':
+        return test_results_mydata_encode(request)
+
+
+def test_results_mydata_encode(request):
+    if request.method == 'POST':
+        form = MyDataEncodeParameterForm(request.POST, request.FILES)
+        form.set_initial_values(request.POST['cell'],
+                                request.POST['method'],
+                                request.POST['session_id'])
+        if form.is_valid():
+            newdoc = MyDataEncodeFormModel(mydata=request.FILES['mydata'])
+            newdoc.save()
+        else:
+            print("\n\n\n\n NOT VALID:",form.errors, "\n\n\n\n")
+
+    return render(request, 'tester/job_status.html')
+
+
+def test_results_encode(request):
     tf1 = request.POST.getlist('tf1')
     tf2 = request.POST.getlist('tf2')
     max_dist = int(request.POST['max_dist'])
@@ -84,8 +113,6 @@ def test_results(request):
 
     #{% render_table table %}
     return render(request, 'tester/test_results.html', context)
-
-
 
 def test_results_2(request):
 
