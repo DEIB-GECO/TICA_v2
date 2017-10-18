@@ -1,18 +1,20 @@
-<!doctype html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <title >TICA v2 PROTOTYPE TESTER - PARAMETERS</title>
-    <!-- <link rel="stylesheet" type="text/css" href="css/Marathon1-team_css.css"> -->
-</head>
-<body>
-    <h1>TICA v2 PROTOTYPE TESTER - PARAMETERS</h1>
-    <p>This is a mock main page for testing using TICA_v2.</p>
-    <form action="{% url 'tester:test_results' %}" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Test" />
+{% extends "tester/base.html" %}
+{% load bootstrap4 %}
+
+
+{% block content_header %}
+<h1>TICA v2 PROTOTYPE TESTER - QUIKSILVER</h1>
+<p>This is a mock main page for testing using TICA_v2.</p>
+{% endblock %}
+
+
+{% block content_body %}
+<form action="{% url 'tester:test_results' %}" method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Submit</button>
+    {% endbuttons %}
+
 </form>
-    <hr>
-    <a href="{% url 'tester:index' %}">Go back to home</a>
-</body>
+{% endblock %}

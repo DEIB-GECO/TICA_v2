@@ -1,0 +1,52 @@
+{% load bootstrap4 %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TICA v2</title>
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% bootstrap_messages %}
+</head>
+<body>
+
+
+<div class="row">
+
+    <div class="col col-md-2"></div>
+    <div class="col col-md-8">
+        <nav id="navbar-example2" class="navbar navbar-light bg-light">
+            <a class="navbar-brand" href="{% url 'tester:index' %}">TICA</a>
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Documentation</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contacts</a>
+                </li>
+
+            </ul>
+        </nav>
+        <div class="card">
+            <div class="card-header">
+                {% block content_header %}
+                {% endblock %}
+
+            </div>
+
+            <div class="card-body">
+
+                {% block content_body %}
+                {% endblock %}
+
+            </div>
+        </div>
+    </div>
+    <div class="col col-md-2"></div>
+</div>
+
+
+</body>
+</html>
