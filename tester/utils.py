@@ -52,7 +52,6 @@ def get_tf_list(cell):
     return all_tfs
 
 
-
 #for now tail size = 1000
 #for now p values are 1,5,10,20
 #test_list =  ['average', 'mad', 'median', 'tail_1000']

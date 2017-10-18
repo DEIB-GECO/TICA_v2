@@ -6,9 +6,23 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
-
 from django.db import models
+from django import forms
 
+MAX_DISTANCES = ((1100, '1100bp'),
+                 (2200, '2200bp'),
+                 (5500, '5500bp')
+                 )
+
+TESTS = (('average', 'Average'),
+         ('mad', 'Median Absolute Deviation'),
+         ('median', 'Median'),
+         ('tail_1000', 'Right tail size'))
+
+P_VALUES = ((5, '0.05'),
+            (10, '0.1'),
+            (20, '0.2')
+            )
 
 class DjangoMigrations(models.Model):
     app = models.CharField(max_length=255)
@@ -84,3 +98,9 @@ class EncodeFormModel(models.Model):
     cell = models.CharField(max_length=20)
     method = models.CharField(max_length=20)
     tf1 = models.CharField(max_length=20)
+    max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1)
+    num_min = models.IntegerField()
+    num_min_w_tsses = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
+    which_tests = models.CharField(max_length=20,choices=TESTS, blank=False, null=False, default=1)
+    min_test_num = models.IntegerField()
+    pvalue = models.IntegerField(choices=P_VALUES, default=1)

@@ -1,16 +1,9 @@
 from django import forms
 from .models import *
 
-MAX_DISTANCES = ((1100, '1100bp'),
-                 (2200, '2200bp'),
-                 (5500, '5500bp'),
-                 (-1, 'custom') # Placeholder
-                 )
+
 #['average', 'mad', 'median', 'tail_1000']
-TESTS = (('average', 'Average'),
-         ('mad', 'Median Absolute Deviation'),
-         ('median', 'Median'),
-         ('tail_1000', 'Right tail size'))
+
 P_VALUES = ((5, '0.05'),
             (10, '0.1'),
             (20, '0.2')
@@ -19,17 +12,38 @@ P_VALUES = ((5, '0.05'),
 class EncodeParameterForm(forms.ModelForm):
     class Meta:
         model = EncodeFormModel
-        fields = ['tf1', 'cell', 'method']
+        fields = ['tf1',
+                  'cell',
+                  'method',
+                  'max_dist',
+                  'num_min',
+                  'num_min_w_tsses',
+                  'which_tests',
+                  'min_test_num',
+                  'pvalue']
         widgets ={
             'cell': forms.HiddenInput(),
             'method': forms.HiddenInput(),
+            'which_tests' : forms.CheckboxSelectMultiple(),
+
         }
+
+        labels = {
+            'which_tests' : 'Which tests do you want to use?',
+            'max_dist' : 'Maximum distance in couples [bp]',
+            'num_min' : 'How many mindistance couples are needed?',
+            'num_min_w_tsses' : 'Fraction of couples colocating in a promoter?',
+            'min_test_num' : 'How many tests should be passed?',
+            'pvalue' : 'Individual test pvalue'
+        }
+
 
     def __init__(self, cell, method,*args, **kwargs):
         super(EncodeParameterForm, self).__init__(*args, **kwargs)
         self.fields['cell'].initial = cell
         self.fields['method'].initial = method
-        #self.fields['tf1'] = cell
+        #self.fields['tf1'].choices = ""
+        self.fields['which_tests'].empty_label = None
 
 
 class EncodeParameterForm_2(forms.Form):
