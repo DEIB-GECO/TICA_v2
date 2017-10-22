@@ -11,7 +11,15 @@
 <body>
     <h1>TICA v2 PROTOTYPE TESTER - TEST RESULTS</h1>
     <p>This is a mock main page for displaying test results using TICA_v2.</p>
-    <p>Testing on {{ tf1 }} and {{ tf2 }} on cell line {{ cell }} returned the following results:<br>
+    <p>Testing on
+        {% for t in tf1 %}
+            <i>{{t}}</i>
+        {% endfor %}
+        vs.
+        {% for t in tf2 %}
+           <i>{{t}}</i>
+        {% endfor %}
+        on cell line {{ cell }} returned the following results:<br>
     <ul>
         <li>Max_distance: {{ maxdist }} </li>
         <li>Minimum number of couples: {{ num_min }} </li>
@@ -23,8 +31,8 @@
         <li>p value of individual tests: {{ p_value }} </li>
         <li>Number of rejects needed: {{ min_test_num }}</li>
     </ul>
-    {% render_table table %}
+
     <hr>
     <a href="{% url 'tester:param_input' %}">Another test</a> <br>
-    <a href="{% url 'home:index' %}">Go back to home</a>
+    <a href="{% url 'tester:index' %}">Go back to home</a>
 </body>

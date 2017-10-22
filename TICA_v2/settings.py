@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_tables2',
+    'bootstrap4',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,6 @@ STATICFILES_FINDERS = (
 )
 
 STATIC_ROOT = ''
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

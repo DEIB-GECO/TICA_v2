@@ -4,7 +4,7 @@ import numpy as np
 import logging
 
 
-from tester.models import Hepg2, Hepg2Null
+from tester.models import *
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +43,10 @@ calculated_null = calculate_null()
 def get_all_tfs() :
     logger.warning('all_tfs is ready')
     #we need to optimize this
-    return list(Hepg2.objects.values_list('tf1',flat=True).distinct()) + list(Hepg2.objects.values_list('tf2',flat=True).distinct())
+    return CellLineTfs.objects.filter(cell_line='hepg2').values_list('tf', flat=True)
 
 #lazy val
-all_tfs = sorted(list(set(get_all_tfs())))
+all_tfs = sorted(list(get_all_tfs()))
 
 def get_tf_list(cell):
     return all_tfs
@@ -72,7 +72,7 @@ def check_tf(tf_in, maxd, tail_size, min_tss, min_count, p_value, min_num_true_t
 
         # contains the max line less then or equal to maxd
         #TODO we can select all together, this will be faster
-        line = Hepg2.objects.filter(tf1=tf1).filter(tf2=tf2).filter(distance__lte=maxd).order_by('-distance').first()
+        line = CellLineCouple.objects.filter(tf1=tf1).filter(tf2=tf2).filter(distance__lte=maxd).order_by('-distance').first()
         # why??
         line_null = Hepg2Null.objects.filter(tf1=tf1).filter(tf2=tf2).filter(max_distance=maxd).values().first()
 
