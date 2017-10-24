@@ -1,0 +1,32 @@
+antibody_accession	ENCAB000ADZ
+assay	ChIP-seq
+assembly	hg19
+audit_internal_action	biological replicates with identical biosample
+audit_internal_action	missing derived_from
+audit_warning	low read depth
+audit_warning	low read length
+audit_warning	mild to moderate bottlenecking
+audit_warning	moderate library complexity
+biosample_age	15 year
+biosample_life_stage	child
+biosample_organism	Homo sapiens
+biosample_sex	male
+biosample_term_id	EFO:0001187
+biosample_term_name	HepG2
+biosample_type	immortalized cell line
+experiment_accession	ENCSR000BKE
+experiment_date_released	2011-07-18
+experiment_target	ATF3-human
+file_accession	ENCFF002CKB
+file_download_url	https://www.encodeproject.org/files/ENCFF002CKB/@@download/ENCFF002CKB.bed.gz
+file_format	bed narrowPeak
+file_status	archived
+lab	ENCODE Consortium Analysis Working Group
+library_extraction_method	see document
+library_lysis_method	see document
+library_made_from	DNA
+library_strand_specific	False
+md5sum	8db7f95c02a98255bad497b3abcab3d2
+output_type	optimal idr thresholded peaks
+project	ENCODE
+size	83386
