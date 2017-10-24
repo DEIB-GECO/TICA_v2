@@ -1,11 +1,7 @@
-import sys
 from os import walk
-import tqdm
 from collections import defaultdict
 from multiprocessing import Pool, Lock, Process
-import os
 import multiprocessing
-import time
 
 # defintions
 sameDs = True
@@ -235,8 +231,9 @@ class Task(object):
         return '%s - %s' % (self.tf1, self.tf2)
 
 
-if __name__ == '__main__':
-    traverse = [(tf1, tf2) for tf1 in list_of_tf for tf2 in list_of_tf if tf1 < tf2]
+#if __name__ == '__main__':
+def run_analysis(list_of_tf1, list_of_tf2, tf1_dir, tf2_dir):
+    traverse = [(tf1, tf2) for tf1 in list_of_tf1 for tf2 in list_of_tf2 if tf1 < tf2]
     # Establish communication queues
     tasks = multiprocessing.JoinableQueue()
     results = multiprocessing.Queue()

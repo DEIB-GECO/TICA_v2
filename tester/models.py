@@ -260,3 +260,11 @@ class MyDataEncodeFormModel(models.Model):
     method = models.CharField(max_length=20)
     session_id = models.CharField(max_length=100)
     mydata = models.FileField(upload_to="uploaded/")
+
+class AnalysisResults(models.Model):
+    tf1 = models.CharField(max_length=20)
+    tf2 = models.CharField(max_length=20)
+    avg = models.DecimalField(max_digits=20, decimal_places=2, )
+    median = models.DecimalField(max_digits=20, decimal_places=2)
+    mad = models.DecimalField(max_digits=20, decimal_places=2)
+    tail_1000 = models.DecimalField(max_digits=20, decimal_places=2)

@@ -31,7 +31,7 @@
         <li>p value of individual tests: {{ p_value }} </li>
         <li>Number of rejects needed: {{ min_test_num }}</li>
     </ul>
-
+    {% render_table table %}
     <hr>
     <a href="{% url 'tester:param_input' %}">Another test</a> <br>
     <a href="{% url 'tester:index' %}">Go back to home</a>

@@ -9,7 +9,7 @@
 
 
 {% block content_body %}
-<form action="{% url 'tester:test_results' %}" method="post" enctype="multipart/form-data">
+<form action="{% url 'tester:test_results' %}" method="get" enctype="multipart/form-data">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}
