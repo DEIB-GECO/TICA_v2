@@ -44,18 +44,9 @@ class Region(object):
 class Distance(object):
     __slots__ = ['distance', 'intersectTssList']
 
-    # __slots__ = ['distance', 'intersectTssList','regPre','regCurr']
-
-
     def __init__(self, distance, intersectTssList=None):
         self.distance = distance
         self.intersectTssList = intersectTssList
-
-    #     def __init__(self, distance, intersectTssList = None,regPre=None,regCurr=None):
-    #         self.distance = distance
-    #         self.intersectTssList = intersectTssList
-    #         self.regPre = regPre
-    #         self.regCurr = regCurr
 
     def __str__(self):
         return (str(self.distance) + " " + str(self.intersectTssList))
@@ -64,8 +55,9 @@ class Distance(object):
         return str(self)
 
 
+# list1 and list2(oredered) are the same chromosome list of two TFs and returns ordered list
 def linear_merge(list1, list2):
-    #return merged list, if not any of them empty otherwise return empty
+    # return merged list, if not any of them empty otherwise return empty
     list1 = iter(list1)
     list2 = iter(list2)
 
@@ -79,27 +71,6 @@ def linear_merge(list1, list2):
         value2 = next(list2)
     except StopIteration:
         return
-
-    #     #if one of them is empty, then serve the other one
-    #     try:
-    #         value1 = next(list1)
-    #     except StopIteration:
-    #         while True:
-    #             try:
-    #                 yield next(list2)
-    #             except StopIteration:
-    #                 return
-    #     try:
-    #         value2 = next(list2)
-    #     except StopIteration:
-    #         yield value1
-    #         while True:
-    #             try:
-    #                 yield next(list1)
-    #             except StopIteration:
-    #                 return
-
-
 
     # We'll normally exit this loop from a next() call raising StopIteration, which is
     # how a generator function exits anyway.
@@ -134,6 +105,7 @@ def linear_merge(list1, list2):
                         return
 
 
+#list1 and list2(oredered) are the same chromosome list of two TFs and returns the distance between the regions
 def linear_merge_distance(list1, list2):
     listIter = iter(linear_merge(list1, list2))
     # set a pre region with name NO_TF at the position -infinity
@@ -148,7 +120,6 @@ def linear_merge_distance(list1, list2):
                 yield Distance(infinity)
             else:
                 yield Distance(regionCurr.position - regionPre.position, regionCurr.tssList.intersection(regionPre.tssList))
-                # yield Distance(regionCurr.position - regionPre.position, regionCurr.tssList.intersection(regionPre.tssList),regionPre,regionCurr)
 
             regionPre = regionCurr
         except StopIteration:
@@ -156,20 +127,6 @@ def linear_merge_distance(list1, list2):
             yield Distance(infinity)
             return
 
-# linear_merge_distance tests
-# a = []
-# b = []
-# a.append(Region("asd", 1, set([1, 2])))
-# a.append(Region("asd", 2, set([2, 3])))
-#
-# b.append(Region("qwe", 3, set([1, 2])))
-# b.append(Region("qwe", 4))
-#
-# a.append(Region("asd", 5))
-# b.append(Region("qwe", 7))
-#
-# print([i for i in linear_merge(a, b)])
-# print([i for i in linear_merge_distance(a, b)])
 
 lock = Lock()
 
@@ -180,15 +137,7 @@ for (dirpath, dirnames, filenames) in walk(directory):
     break
 
 
-# list_of_tf = [
-# "ARID3A",
-# "ATF1",
-# "ATF3",
-# "ATF4",
-# "BHLHE40"]
-
 def read(tf):
-    print("READ", tf)
     tempTf = defaultdict(list)
     for line in open(directory + tf):
         s = line.strip().split("\t")
@@ -213,7 +162,7 @@ def calculate_distances(inp, tfs=dict()):
     temp_count_tss = defaultdict(int)
     tf1rA = getTfs(tf1, tfs)
     tf2rA = getTfs(tf2, tfs)
-    out_file = open("results2/" + tf1 + "-" + tf2 + ".txt", "w")
+    #out_file = open("results2/" + tf1 + "-" + tf2 + ".txt", "w")
 
     for c in chrs:
         tf1r = tf1rA[c]
@@ -225,7 +174,7 @@ def calculate_distances(inp, tfs=dict()):
         for postDistance in distances:
             if curr_distance.distance < max_distance and curr_distance.distance < pre_distance.distance and curr_distance.distance <= postDistance.distance:
                 # TODO remove
-                out_file.write("\t".join([tf1, tf2, str(curr_distance.distance), str(int(bool(curr_distance.intersectTssList)))]) + "\n")
+                #out_file.write("\t".join([tf1, tf2, str(curr_distance.distance), str(int(bool(curr_distance.intersectTssList)))]) + "\n")
 
                 temp_count_all[curr_distance.distance] += 1
                 if curr_distance.intersectTssList:
@@ -242,7 +191,7 @@ def calculate_distances(inp, tfs=dict()):
             cumulative_count_tss += count_tss
             out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all), str(count_tss), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
         out_file_merged.flush()
-    out_file.close()
+    #out_file.close()
 
 
 out_file = open(result_file, "w")
