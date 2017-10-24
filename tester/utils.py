@@ -124,21 +124,10 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
 
     for line_null in null_lines:
 
-        # tf1 = line_null.tf1
-        # tf2 = line_null.tf2
-
         tf1 = line_null.tf1
         tf2 = line_null.tf2
 
-        # print(tf1)
-        # print(tf2)
-
-        # contains the max line less then or equal to maxd
-        # TODO we can select all together, this will be faster
-        # line = CellLineCouple.objects.filter(cell_line=cell).filter(tf1=tf1).filter(tf2=tf2).filter(distance__lte=maxd).order_by('-distance').first()
         line_null_dict = model_to_dict(line_null)
-
-        # print(line_null.cumulative_count_all)
 
         if (line_null.cumulative_count_all <= min_count):
             continue
@@ -158,5 +147,4 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
             scores['name'] = tf1 + " - " + tf2
             result.append(scores)
 
-    # result is list of tuples first element is name of tf and second one is passed test
     return result

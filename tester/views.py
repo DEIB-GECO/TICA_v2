@@ -66,6 +66,7 @@ def test_results_mydata_encode(request):
                                 request.POST['session_id'])
         if form.is_valid():
             newdoc = MyDataEncodeFormModel(mydata=request.FILES['mydata'])
+            newdoc.mydata.upload_to = "uploaded/session_id/"
             newdoc.save()
         else:
             print("\n\n\n\n NOT VALID:",form.errors, "\n\n\n\n")

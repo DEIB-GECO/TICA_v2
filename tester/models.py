@@ -259,4 +259,4 @@ class MyDataEncodeFormModel(models.Model):
     cell = models.CharField(max_length=20)
     method = models.CharField(max_length=20)
     session_id = models.CharField(max_length=100)
-    mydata = models.FileField(upload_to='uploaded/')
+    mydata = models.FileField(upload_to="uploaded/")
