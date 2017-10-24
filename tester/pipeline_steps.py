@@ -9,7 +9,10 @@ TF which they contain.
 Author: Stefano Perna (stefano.perna@polimi.it)
 Date: 18 October 2017
 Version: 0.1"""
-from tester.models import *
+#from models import *
+from django.forms.models import model_to_dict
+from django.db.models import Q
+#from tester.models import *
 
 import sys
 import gmql as pygmql
@@ -17,71 +20,112 @@ import copy
 import numpy as np
 import pandas as pd
 import intervaltree as it
+import os
+import shutil
+import zipfile
 
 # Chromosome names
 CHRS = list(map(lambda x: "chr" + str(x), range(1, 23))) + ["chrX", "chrY"]
+STATIC_CACHE = dict()
 
 # Common functions
-def __format_checker__(file):
-    """Ancillary function of data_uploader. Returns a string
-    based on the format inspected in the file:
-    - 'narrowPeak': the file suits the ENCODE narrowPeak
-     specifications
-     - 'BED2': the file contains chromosome and start information
-     only,
-     - 'BED3': the file contains chromosome, start and stop
-     information,
-     - 'BED4': the file contains chromosome, start, stop and strand
-     information
-     - 'unknown_format': anything else.
-    """
-    with open(file, 'r') as infile:
-        raw_data = list(infile.readlines)
-    # default separator is assumed to be \t
-    separator = '\t'
-    # comment is #
-    comment_search = [item[0] == '#' for item in raw_data]
-    if all(comment_search):
-        return 'unknown_format'
-    else:
-        true_indexes = [comment_search[i] == False
-                        for i in range(len(comment_search))]
-        if ';' in comment_search[true_indexes[0]] and \
-                        separator not in comment_search[true_indexes[0]]:
-            separator=';'
-        elif ',' in comment_search[true_indexes[0]] \
-                and separator not in comment_search[true_indexes[0]]:
-            sep=','
-        all_data = pd.read_csv(file,sep=separator, comment='#')
-        if True:
-            return 'narrowPeak'
-            #list of narrowpeak specifications
-        elif all([item in CHRS for item in all_data[0]]) \
-                and type(all_data[1]) == int \
-                and type(all_data[2]) == int \
-                and type(all_data[3]) == str:
-            return 'BED4'
-        elif all([item in CHRS for item in all_data[0]]) \
-                and type(all_data[1]) == int \
-                and type(all_data[2]) == int:
-            return 'BED3'
-        elif all([item in CHRS for item in all_data[0]]) \
-                and type(all_data[1]) == int:
-            return 'BED2'
-        else:
-            return 'unknown_format'
+# def __format_checker__(file):
+#     """Ancillary function of data_uploader. Returns a string
+#     based on the format inspected in the file:
+#     - 'narrowPeak': the file suits the ENCODE narrowPeak
+#      specifications
+#      - 'BED2': the file contains chromosome and start information
+#      only,
+#      - 'BED3': the file contains chromosome, start and stop
+#      information,
+#      - 'BED4': the file contains chromosome, start, stop and strand
+#      information
+#      - 'unknown_format': anything else.
+#     """
+#     with open(file, 'r') as infile:
+#         raw_data = list(infile.readlines)
+#     # default separator is assumed to be \t
+#     separator = '\t'
+#     # comment is #
+#     comment_search = [item[0] == '#' for item in raw_data]
+#     if all(comment_search):
+#         return 'unknown_format'
+#     else:
+#         true_indexes = [comment_search[i] == False
+#                         for i in range(len(comment_search))]
+#         if ';' in comment_search[true_indexes[0]] and \
+#                         separator not in comment_search[true_indexes[0]]:
+#             separator=';'
+#         elif ',' in comment_search[true_indexes[0]] \
+#                 and separator not in comment_search[true_indexes[0]]:
+#             sep=','
+#         all_data = pd.read_csv(file,sep=separator, comment='#')
+#         if True:
+#             return 'narrowPeak'
+#             #list of narrowpeak specifications
+#         elif all([item in CHRS for item in all_data[0]]) \
+#                 and type(all_data[1]) == int \
+#                 and type(all_data[2]) == int \
+#                 and type(all_data[3]) == str:
+#             return 'BED4'
+#         elif all([item in CHRS for item in all_data[0]]) \
+#                 and type(all_data[1]) == int \
+#                 and type(all_data[2]) == int:
+#             return 'BED3'
+#         elif all([item in CHRS for item in all_data[0]]) \
+#                 and type(all_data[1]) == int:
+#             return 'BED2'
+#         else:
+#             return 'unknown_format'
     
     
-def data_uploader(folder_list=None):
+def data_uploader(input_zip, target_folder='path/to/default'):
     """Loads datasets from the disk and returns formatted GMQLDatasets.
     Keyword arguments:
-        -- file_list: list of folders contaiining files to be
+        -- input_zip: path to zip file containing files, to be
         accessed on disk (default: None)
     """
-    assert folder_list, "ERROR: folder list is empty. Aborting."
-    for place in folder_list:
     
-    return
+    # TMP
+    TMP_FILE_PATH = 'tmp/'
+    if not os.path.exists(TMP_FILE_PATH):
+        os.makedirs(TMP_FILE_PATH)
+        
+    assert input_zip, "ERROR: no input file. Aborting."
+    
+    if not os.path.exists(target_folder):
+        os.makedirs(target_folder)
+        
+    with zipfile.ZipFile(input_zip,'r') as zip_ref:
+        zip_ref.extractall(TMP_FILE_PATH)
+    
+    # Assume the zip folder contains one folder for each TF - no enclosing
+    # folder.
+    tf_folder = list(os.walk(TMP_FILE_PATH))
+    
+    #childs = [item for item in tf_folder[0][1] if not item.startswith('__')]
+    
+    #if not list(os.walk('%s/%s/' % (TMP_FILE_PATH, childs[0])))[0][2]:
+    #    tf_folder=list(os.walk('%s/%s' % (TMP_FILE_PATH,
+    #                                      tf_folder[0][1][-1])))
+    #print(tf_folder)
+    
+    tf_list = list(filter(lambda s: not s.startswith('__'), tf_folder[0][1]))
+    
+    for tf in tf_list:     # They are also folder names
+        for (dir, _, files) in os.walk('%s%s' % (TMP_FILE_PATH, tf)):
+            for index, file in enumerate(
+                    [item for item in files if not item.startswith('.')]
+            ):
+                shutil.copy('%s/%s' % (dir, file), '%s/%s_%d.bed' % (
+                    target_folder, tf, index)
+                            )
+                with open('%s/%s_%d.bed.meta' % (
+                    target_folder, tf, index),'w') as metafile:
+                    metafile.write('experiment_target\t%s\n' % tf)
+    shutil.rmtree(TMP_FILE_PATH)
+    #os.remove(input_zip)
+    return tf_list
 
 
 def tfbs_filter(datasets, tf_list, window_size=1000, min_acc_value=3):
@@ -162,14 +206,18 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
         ]
     )
     
-    to_execute = zip(target_list,tfbs_file_list)
+    to_execute = zip(target_list, tfbs_file_list)
     
     for item in to_execute:
-        tfbses_raw = pd.read_csv(item[1],
-                                 sep='\t', header=None).values
+        tfbses_raw_0 = pd.read_csv(item[1],
+                                 sep='\t', header=None)
+        tfbses_raw_v = [item.tolist() for item in tfbses_raw_0.values]
+        tfbses_raw_in = tfbses_raw_0.index
+        
+        tfbses_raw = list(zip(tfbses_raw_in, tfbses_raw_v))
         tfbses = dict(
             [
-                (c, [item for item in tfbses_raw if item[1] == c])
+                (c, [item for item in tfbses_raw if item[1][0] == c])
                 for c in CHRS
             ]
         )
@@ -182,17 +230,20 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
                  else (item[2] - 200, item[3] + 2001, item[0])
                  for item in tsses[c]]
             )
-            c_map_ = [(tfbs[0], f_tss[tfbs[2]]) for tfbs in f_tfbses]
+            c_map_ = [(tfbs[1][0], tfbs[1][1], f_tss[tfbs[1][1]])
+                      for tfbs in f_tfbses]
             associated_tss += c_map_
-        with open('%s/%s_associated_tss.txt' %
+        print(associated_tss)
+        with open('%s/%s_TFBS_w_MAPS.tsv' %
                           (target_folder, item[0]), 'w') \
                 as associated_outfile:
+            
             associated_outfile.writelines(
-                ['%d;%s\n' %
-                 (item[0], ','.join([str(tss_id)
+                ['%s\t%d\t%s\n' %
+                 (item[0], item[1], ','.join([str(tss_id)
                                      for tss_id in sorted(
-                         [data[2] for data in list(item[1])])])
-                 if list(item[1]) else '-1')
+                         [data[2] for data in list(item[2])])])
+                 if list(item[2]) else '')
                  for item in associated_tss])
         print('Map complete.')
     return True
@@ -284,7 +335,7 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
                             & (
                                 enc_narrow_full['experiment_target'] == tf)])
     hepg2_narrow_data = hepg2_narrow_df_list[0]
-    print(hepg2_narrow_data.materialise().regs)
+    print(hepg2_narrow_data.materialize().regs)
     for df in hepg2_narrow_df_list[1:]:
         hepg2_narrow_data = hepg2_narrow_data.union(df)
 
@@ -406,7 +457,7 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
     return both_strands_res
 
 
-def compute_nulls(i_cell):  # +a list of parameters
+def compute_nulls(i_cell='HepG2'):  # +a list of parameters
     """Computes the mindistance couple distance distributions given
     two TFBS datasets and returns a null table Model row for
     insertion.
@@ -420,53 +471,43 @@ def compute_nulls(i_cell):  # +a list of parameters
     # TODO make this list reading from database
     # SP: I'm adding two input parameters, cell and a tf_list. For now
     # I don't use them but we should use them in the above TODO
-    include_list = ['ARID3A', 'ATF4', 'BHLHE40', 'BRCA1', 'CEBPB', 'CEBPD',
-                    'CHD2', 'CREM', 'CTCF', 'DNMT3B', 'DROSHA', 'ELF1',
-                    'EP300', 'ETV4', 'EZH2', 'FOSL2', 'FOXA1', 'FOXA2',
-                    'FOXK2', 'GABPA', 'GATA4', 'GTF2F1', 'HCFC1', 'HDAC2',
-                    'HHEX', 'HLF', 'HNF1A', 'HNF4A', 'HNF4G', 'HNRNPLL',
-                    'HSF1', 'IKZF1', 'IRF3', 'JUND', 'JUN', 'KAT2B', 'MAFF',
-                    'MAX', 'MAZ', 'MBD4', 'MNT', 'MXI1', 'MYBL2', 'MYC',
-                    'NFE2L2', 'NFIC', 'NR2C2', 'NR2F6', 'NRF1', 'PLRG1',
-                    'POLR2A', 'POLR2AphosphoS2', 'POLR2AphosphoS5',
-                    'RAD21', 'RAD51', 'RCOR1', 'REST', 'RFX5', 'RNF2',
-                    'RXRA', 'SIN3A', 'SIN3B', 'SMC3', 'SOX13', 'SP1',
-                    'SREBF1', 'SUZ12', 'TAF1', 'TBP', 'TCF7L2', 'TCF7',
-                    'TEAD4', 'TFAP4', 'USF1', 'USF2', 'YBX1', 'YY1',
-                    'ZBTB40', 'ZBTB7A', 'ZHX2', 'ZKSCAN1', 'ZMYM3', 'ZNF143',
-                    'ZNF207', 'ZNF274', 'ZNF384']
-    nullpd = pd.DataFrame(list(Hepg2Null.objects.filter(
-        tf1__in=include_list).filter(tf2__in=include_list).exclude(
-        average__isnull=True).values()))
+    if not 'calculate_null-' + i_cell in STATIC_CACHE:
+        def calc():
+            # TODO make this list reading from database
+            include_list = list(
+                CellLineTfs.objects.filter(cell_line=i_cell).filter(use_in_null=True).values_list('tf', flat=True))
 
-    max_distances = sorted(nullpd.reset_index()['max_distance'].unique())
+            nullpd = pd.DataFrame(list(CellLineNull.objects.filter(cell_line=i_cell).filter(tf1__in=include_list)
+                                       .filter(tf2__in=include_list).exclude(average__isnull=True).values()))
 
-    bootstrap_size = 10000
-    nullpds = {}
-    percs = [1, 5, 10, 20]
-    for max_distance in max_distances:
-        temp = nullpd[nullpd['max_distance'] == max_distance].drop(
-            ['tf1', 'tf2', 'max_distance'], axis=1
-        )
-        temp = temp.sample(bootstrap_size, replace=True)
-        x = []
-        names = []
-        for col in temp.columns:
-            temp1 = (temp[col])
-            tempavgs = [np.percentile(temp1, q=perc) for perc in percs]
-            x = x + tempavgs
+            max_distances = sorted(nullpd.reset_index()['max_distance'].unique())
 
-            nms = [col + "-" + str(perc) for perc in percs]
-            names = names + nms
-        nullpds[max_distance] = x
-    logger.warning('calculated_null is ready')
+            bootsrapt_size = 10000
+            nullpds = {}
+            percs = [1, 5, 10, 20]
+            for max_distance in max_distances:
+                temp = nullpd[nullpd['max_distance'] == max_distance].drop(['cell_line_id', 'tf1', 'tf2', 'max_distance'
+                                                                            # ,'cumulative_count_all','cumulative_count_tss'
+                                                                            ], axis=1)
+                # temp = temp.sample(bootsrapt_size, replace=True)
+                x = []
+                names = []
+                for col in temp.columns:
+                    # print(col)
+                    temp1 = (temp[col])
+                    tempavgs = [np.percentile(temp1, q=perc) for perc in percs]
+                    x = x + tempavgs
 
-    result = pd.DataFrame(nullpds, index=names)
-    # return result # OR POSSIBLY .to_dict
-    # THAT GENERATED TWO LEVEL OF DICTIONARY, MAXD, AND
-    # THEN NAME THAT GENERATED BEFORE
-    return result.to_dict()  # THAT GENERATED TWO LEVEL OF DICTIONARY,
-    # MAXD, AND THEN NAME THAT GENERATED BEFORE
+                    nms = [col + "-" + str(perc) for perc in percs]
+                    names = names + nms
+                nullpds[max_distance] = x
+            # logger.warning('calculated_null is ready')
+
+            result = pd.DataFrame(nullpds, index=names)
+            return result.to_dict()
+
+        STATIC_CACHE['calculate_null-' + i_cell] = calc()
+    return STATIC_CACHE['calculate_null-' + i_cell]
 
 # User-guided workflow-only
 def __get_tf_list__(cell):

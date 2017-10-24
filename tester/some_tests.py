@@ -75,40 +75,104 @@ execution
 Author: Stefano Perna (stefano.perna@polimi.it)
 Date: date of construction
 Version: version name"""
-from __future__ import division, print_function
 import sys
 import pipeline_steps
 import gmql as pygmql
+import os
 
+# def pipp():
+#     bananetf = tester.pipeline_steps.data_uploader('tester/arif.zip',
+#                                                    'test_banane/')
+#     print(bananetf)
+#     exit()
+#
+# pipp()
+# exit()
 NARROW_PATH = '/Volumes/PERNA/ENC_narrow_Aug_2017/'
-CELL_NAME = 'HepG2'
+TEST_DATA = '/Volumes/PERNA/ENCODE_data_4_tests/'
+# CELL_NAME = 'HepG2'
+#
+# # Temporary for debugging
+# list_of_targets = sorted(['JUN-human', 'ATF3-human', 'MYC-human'])
+#
+# # with open(TF_LIST_PATH, 'r') as tf_list_file:
+# #     list_of_targets = sorted(map(lambda s: s.strip(), tf_list_file))
+#
+# enc_narrow_full = pygmql.load_from_path(
+#     local_path=NARROW_PATH,
+#     parser=pygmql.parsers.NarrowPeakParser())
+#
+# print('after loading')
+# datasets = []
+# tf_list = set([])
+# for index, tf in enumerate(list_of_targets):
+#     this_ds = enc_narrow_full[
+#         (enc_narrow_full['biosample_term_name'] == CELL_NAME)
+#         & (enc_narrow_full['assay'] == 'ChIP-seq')
+#         & (enc_narrow_full['experiment_target'] == tf)
+#     ]
+#     #].materialize()  # Available in future versions?
+#     datasets.append(this_ds)
+#     # tf_list = tf_list.union(set([item[0] for item in this_ds.meta[
+#     #     'experiment_target'].values])
+#     #                         )
+#
+# # test = enc_narrow_full[
+# #         (enc_narrow_full['biosample_term_name'] == CELL_NAME)
+# #         & (enc_narrow_full['assay'] == 'ChIP-seq')
+# #         & (enc_narrow_full['experiment_target'] == 'MYC-human')].materialize()
+# # print(len(test.regs))
+# # exit()
+# # # Have to materialize first?
+# # test_data = pipeline_steps.tfbs_filter(
+# #     datasets, list_of_targets
+# # )
+# # test_data.materialize(output_path='20-Oct-2017')
+# print('I got here')
+# tmp = tester.pipeline_steps.tss_filter('/Volumes/PERNA/TSSes/',
+#                                 cell_name='HepG2',
+#                                 list_of_targets='JUN-human')
+# print('I also got here.')
+# print(tmp.regs)
 
-# Temporary for debugging
-list_of_targets = sorted(['ATF2-human', 'ATF3-human', 'FLAG-SOX5-human'])
 
-# with open(TF_LIST_PATH, 'r') as tf_list_file:
-#     list_of_targets = sorted(map(lambda s: s.strip(), tf_list_file))
+# ## ALGORITHMIC WORKFLOW
+#
+# cell_line = 'HepG2'
+# test_ds = enc_narrow_full[
+#     (enc_narrow_full['biosample_term_name'] == cell_line)
+#     & (enc_narrow_full['assay'] == 'ChIP-seq')
+#     & ((enc_narrow_full['experiment_target'] == 'MAX-human')
+#     | (enc_narrow_full['experiment_target'] == 'MYC-human')
+#     | (enc_narrow_full['experiment_target'] == 'JUN-human')
+#     | (enc_narrow_full['experiment_target'] == 'ATF3-human')
+#     | (enc_narrow_full['experiment_target'] == 'ARID3A-human'))
+#     ]
+# print('after select')
+# test_ds.materialize(output_path='ENCODE_data_4_tests/')
+# tmp = test_ds.materialize()
+# print(tmp.meta['experiment_target'].values)
+# tfs = sorted(list(set(tmp.meta['experiment_target'].values)))
 
-enc_narrow_full = pygmql.load_from_path(
-    local_path=NARROW_PATH,
+#print(tfs)
+## USER-GUIDED WORKFLOW
+
+input_zip = 'test1.zip'
+cell_line = 'HepG2'
+tss_file = 'active_tsses.bed'
+tfs = pipeline_steps.data_uploader(input_zip, target_folder='test1/')
+your_data = pygmql.load_from_path(
+    local_path='test1/',
     parser=pygmql.parsers.NarrowPeakParser())
-
-datasets = []
-tf_list = set([])
-for index, tf in enumerate(list_of_targets):
-    this_ds = enc_narrow_full[
-        (enc_narrow_full['biosample_term_name'] == CELL_NAME)
-        & (enc_narrow_full['assay'] == 'ChIP-seq')
-        & (enc_narrow_full['experiment_target'] == tf)
-    ].materialize()  # Available in future versions?
-    datasets.append(this_ds)
-    tf_list = tf_list.union(set([item[0] for item in this_ds.meta[
-        'experiment_target'].values])
-                            )
-
-# Have to materialize first?
-test_data = pipeline_steps.tfbs_filter(
-    datasets, sorted(list(tf_list))
-)
-test_data.materialize(output_path='20-Oct-2017')
-print('I got here')
+your_signals = pipeline_steps.tfbs_filter([your_data], tfs)
+print(your_signals.materialize().meta)
+your_signals.materialize('new_test_attempt/')
+materialized_files = ['new_test_attempt/exp/%s' % item
+                      for item in list(os.walk('new_test_attempt/'))[-1][2]
+                      if not item.startswith('.')
+                      and not item.startswith('_')
+                      and '.meta' not in item
+                      and '.schema' not in item]
+print(materialized_files)
+your_maps = pipeline_steps.tfbs2tss_mapper(materialized_files, tfs, tss_file,
+                                           target_folder='ciao/')
