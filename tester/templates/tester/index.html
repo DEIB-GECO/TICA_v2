@@ -9,7 +9,7 @@
 
 
 {% block content_body %}
-<form action="{% url 'tester:param_input' %}" method="post">
+<form action="{% url 'tester:param_input' %}" method="get">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}

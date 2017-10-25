@@ -24,8 +24,8 @@ def index(request):
 
 
 def param_input(request):
-    method = request.POST['method']
-    cell = request.POST['cell']
+    method = request.GET['method']
+    cell = request.GET['cell']
 
     form = None
     if method == 'encode':
@@ -36,7 +36,11 @@ def param_input(request):
     elif method == 'mydata_mydata':
         pass
 
-    return render(request, "tester/param_input.html", {'form': form})
+    context = {
+        'form' : form,
+        'http_method' : 'get' if method == 'encode' else 'post'
+    }
+    return render(request, "tester/param_input.html", context=context)
 
 
 def child(session_id):
