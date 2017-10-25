@@ -115,7 +115,8 @@ def data_uploader(input_zip, target_folder='path/to/default'):
     for tf in tf_list:     # They are also folder names
         for (dir, _, files) in os.walk('%s%s' % (TMP_FILE_PATH, tf)):
             for index, file in enumerate(
-                    [item for item in files if not item.startswith('.')]
+                    [item for item in files if not item.startswith('.')
+                     and '.meta' not in item]
             ):
                 shutil.copy('%s/%s' % (dir, file), '%s/%s_%d.bed' % (
                     target_folder, tf, index)
@@ -128,7 +129,7 @@ def data_uploader(input_zip, target_folder='path/to/default'):
     return tf_list
 
 
-def tfbs_filter(datasets, tf_list, window_size=1000, min_acc_value=3):
+def tfbs_filter(tfbs_data, tf_list, window_size=1000, min_acc_value=3):
     """Filters binding sites according to accumulation values in the
     moving window.
     Keyword arguments:
@@ -146,22 +147,22 @@ def tfbs_filter(datasets, tf_list, window_size=1000, min_acc_value=3):
     # for index in range(len(tf_list)):
     #     ds_list.append(datasets[index].to_GMQLDataset())
     
-    # First process the simple ones in batch
-    tfbs_data = datasets[0]
-    for df in datasets[1:]:
-        tfbs_data = tfbs_data.union(df)
-
+    # # First process the simple ones in batch
+    # tfbs_data = datasets[0]
+    # for df in datasets[1:]:
+    #     tfbs_data = tfbs_data.union(df)
+    
+    tfbs_data.materialize('input_banane-1/')
     npeaks = tfbs_data.reg_project(
         new_field_dict={
             'start': tfbs_data.start + tfbs_data.peak,
-            'stop': tfbs_data.start
-                    + tfbs_data.peak + 1}
+            'stop': tfbs_data.start + tfbs_data.peak + 1}
     )
-
+    npeaks.materialize('npeaks_banane0/')
     # NOTE: groupBy must be given in list format
     covered = npeaks.cover(1, 'ANY', groupBy=['experiment_target'])
-
-    signals = covered
+    covered.materialize('cover_banane1/')
+    signals = covered # Is it the same as copying?
     # Enlarge by moving window
     windows = covered.reg_project(new_field_dict={'start': covered.start
                                                            - window_size,
@@ -206,8 +207,8 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
         ]
     )
     
-    to_execute = zip(target_list, tfbs_file_list)
     
+    to_execute = zip(target_list, tfbs_file_list)
     for item in to_execute:
         tfbses_raw_0 = pd.read_csv(item[1],
                                  sep='\t', header=None)
