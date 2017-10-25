@@ -90,6 +90,7 @@ import os
 # exit()
 NARROW_PATH = '/Volumes/PERNA/ENC_narrow_Aug_2017/'
 TEST_DATA = '/Volumes/PERNA/ENCODE_data_4_tests/'
+
 # CELL_NAME = 'HepG2'
 #
 # # Temporary for debugging
@@ -138,41 +139,49 @@ TEST_DATA = '/Volumes/PERNA/ENCODE_data_4_tests/'
 
 # ## ALGORITHMIC WORKFLOW
 #
-# cell_line = 'HepG2'
-# test_ds = enc_narrow_full[
-#     (enc_narrow_full['biosample_term_name'] == cell_line)
-#     & (enc_narrow_full['assay'] == 'ChIP-seq')
-#     & ((enc_narrow_full['experiment_target'] == 'MAX-human')
-#     | (enc_narrow_full['experiment_target'] == 'MYC-human')
-#     | (enc_narrow_full['experiment_target'] == 'JUN-human')
-#     | (enc_narrow_full['experiment_target'] == 'ATF3-human')
-#     | (enc_narrow_full['experiment_target'] == 'ARID3A-human'))
-#     ]
-# print('after select')
-# test_ds.materialize(output_path='ENCODE_data_4_tests/')
+
 # tmp = test_ds.materialize()
 # print(tmp.meta['experiment_target'].values)
 # tfs = sorted(list(set(tmp.meta['experiment_target'].values)))
 
+
+# enc_narrow_full = pygmql.load_from_path(
+#     local_path=NARROW_PATH,
+#     parser=pygmql.parsers.NarrowPeakParser())
+# test = enc_narrow_full[
+#         (enc_narrow_full['biosample_term_name'] == 'HepG2')
+#         & (enc_narrow_full['assay'] == 'ChIP-seq')
+#         & (enc_narrow_full['experiment_target'] == 'MYC-human')].materialize()
+# print(test.meta)
+# test2 = test.to_GMQLDataset()
+# file2 = test2.materialize()
+# print(file2.meta)
+# exit()
+
 #print(tfs)
 ## USER-GUIDED WORKFLOW
 
-input_zip = 'test1.zip'
+input_zip = 'test2.zip'
 cell_line = 'HepG2'
 tss_file = 'active_tsses.bed'
-tfs = pipeline_steps.data_uploader(input_zip, target_folder='test1/')
+tfs = pipeline_steps.data_uploader(input_zip, target_folder='test2/')
 your_data = pygmql.load_from_path(
-    local_path='test1/',
+    local_path='test2/',
     parser=pygmql.parsers.NarrowPeakParser())
-your_signals = pipeline_steps.tfbs_filter([your_data], tfs)
-print(your_signals.materialize().meta)
-your_signals.materialize('new_test_attempt/')
-materialized_files = ['new_test_attempt/exp/%s' % item
-                      for item in list(os.walk('new_test_attempt/'))[-1][2]
+your_data.materialize('gatto_banane-2/')
+your_signals = pipeline_steps.tfbs_filter(your_data, tfs)
+# tfs are scrambled
+your_signals.materialize('new_test_attempt_2/')
+materialized_files = ['new_test_attempt_2/exp/%s' % item
+                      for item in list(os.walk('new_test_attempt_2/'))[-1][2]
                       if not item.startswith('.')
                       and not item.startswith('_')
                       and '.meta' not in item
                       and '.schema' not in item]
-print(materialized_files)
+tfs = [list(map(lambda s: s.strip().split('\t')[1], open('new_test_attempt_2/exp/%s' % item, 'r')))[0]
+                      for item in list(os.walk('new_test_attempt_2/'))[-1][2]
+                      if not item.startswith('.')
+                      and '.meta' in item]
+print(tfs)
 your_maps = pipeline_steps.tfbs2tss_mapper(materialized_files, tfs, tss_file,
                                            target_folder='ciao/')
