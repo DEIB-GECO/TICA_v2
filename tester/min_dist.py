@@ -6,7 +6,7 @@ import multiprocessing
 # defintions
 sameDs = True
 # if it is same then directory1 should == directory2
-directory = 'cutted_joined/'
+directory = 'tester/ciao/'
 
 max_distance = 10000
 
@@ -132,12 +132,14 @@ for (dirpath, dirnames, filenames) in walk(directory):
     list_of_tf.extend(filenames)
     break
 
+print(list_of_tf)
 
 def read(tf):
     tempTf = defaultdict(list)
     for line in open(directory + tf):
         s = line.strip().split("\t")
-        tss = set() if s[3] == "-1" else set([int(t) for t in s[3].split(",")])
+        print(s)
+        tss = set() if len(s) == 2 or s[2] == "" else set([int(t) for t in s[2].split(",")])
         c = s[0].lower()
         tempTf[c].append(Region(tf, int(s[1]), tss))
     tempTf2 = dict()
@@ -239,7 +241,7 @@ def run_analysis(list_of_tf1, list_of_tf2, tf1_dir, tf2_dir):
     results = multiprocessing.Queue()
 
     # Start consumers
-    num_consumers = min(16, int(multiprocessing.cpu_count()))
+    num_consumers = min(1, int(multiprocessing.cpu_count()))
     print('Creating %d consumers' % num_consumers)
     consumers = [Consumer(tasks, results) for i in range(num_consumers)]
     # consumers = [Consumer(tasks, results)]
