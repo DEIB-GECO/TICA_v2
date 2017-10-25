@@ -23,15 +23,30 @@ chromosome_list = ["chr" + str(i + 1) for i in range(22)] + ["chrx"]
 
 # class definitions
 class Region(object):
-    __slots__ = ['tf', 'position', 'tss_set']
+    __slots__ = ['position', 'tss_set']
 
-    def __init__(self, tf, position, tss_list=set()):
-        self.tf = tf
+    def __init__(self, position, tss_list=None):
         self.position = position
         self.tss_set = tss_list
 
     def __str__(self):
-        return self.tf + " " + str(self.position) + " " + str(self.tss_set)
+        return str(self.position) + " " + str(self.tss_set)
+
+    def __repr__(self):
+        return str(self)
+
+
+# class definitions
+class TempRegion(object):
+    __slots__ = ['list_id', 'position', 'tss_set']
+
+    def __init__(self, tf, position, tss_list=None):
+        self.list_id = tf
+        self.position = position
+        self.tss_set = tss_list
+
+    def __str__(self):
+        return self.list_id + " " + str(self.position) + " " + str(self.tss_set)
 
     def __repr__(self):
         return str(self)
@@ -51,11 +66,21 @@ class Distance(object):
         return str(self)
 
 
+def add_list_id(list, list_val):
+    list = iter(list)
+    while True:
+        try:
+            value = next(list)
+            yield TempRegion(list_val, value.position, value.tss_set)
+        except StopIteration:
+            return
+
+
 # list1 and list2(ordered) are the same chromosome list of two TFs and returns ordered list
 def linear_merge(list1, list2):
     # return merged list, if not any of them empty otherwise return empty
-    list1 = iter(list1)
-    list2 = iter(list2)
+    list1 = iter(add_list_id(list1, 'list1'))
+    list2 = iter(add_list_id(list2, 'list2'))
 
     # if one of them is empty, then return nothing, this is easy for TICA application
     try:
@@ -105,17 +130,17 @@ def linear_merge(list1, list2):
 def linear_merge_distance(list1, list2):
     list_iter = iter(linear_merge(list1, list2))
     # set a pre region with name NO_TF at the position minus infinity
-    region_pre = Region("NO_TF", -infinity)
+    region_pre = TempRegion("NO_LIST", -infinity)
     # send an infinity in the beginning
     yield Distance(infinity)
 
     while True:
         try:
             region_curr = next(list_iter)
-            if region_curr.tf == region_pre.tf:
+            if region_curr.list_id == region_pre.list_id:
                 yield Distance(infinity)
             else:
-                yield Distance(region_curr.position - region_pre.position, region_curr.tss_set.intersection(region_pre.tss_set))
+                yield Distance(region_curr.position - region_pre.position, None if region_pre.tss_set is None or region_curr.tss_set is None else region_curr.tss_set.intersection(region_pre.tss_set))
 
             region_pre = region_curr
         except StopIteration:
@@ -132,6 +157,15 @@ for (dir_path, dir_names, file_names) in walk(directory):
     list_of_tf.extend(file_names)
     break
 
+
+# list_of_tf = [
+#     "ARID3A",
+#     # "MYC",
+#     # "ATF1",
+#     # "ATF3",
+#     # "ATF4",
+#     # "BHLHE40"
+# ]
 print("List of tfs:", list_of_tf)
 
 
@@ -139,9 +173,12 @@ def read(tf):
     temp_tf = defaultdict(list)
     for line in open(directory + tf):
         s = line.strip().split("\t")
-        tss = set() if len(s) == 2 or s[2] == "" else set([int(t) for t in s[2].split(",")])
+        # TODO change location
+        tss_val = s[3] if len(s) >= 2 else None
+        tss_val = tss_val if tss_val != '-1' else None
+        tss = set([int(t) for t in tss_val.split(",")]) if tss_val else None
         c = s[0].lower()
-        temp_tf[c].append(Region(tf, int(s[1]), tss))
+        temp_tf[c].append(Region(int(s[1]), tss))
     temp_tf2 = dict()
     # Select only in chromosome list
     for key in chromosome_list:
@@ -236,7 +273,6 @@ class Task(object):
 
 
 if __name__ == '__main__':
-    traverse = [(tf1, tf2) for tf1 in list_of_tf for tf2 in list_of_tf if tf1 < tf2]
     # Establish communication queues
     tasks = multiprocessing.JoinableQueue()
     results = multiprocessing.Queue()
