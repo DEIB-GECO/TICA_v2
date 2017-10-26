@@ -259,6 +259,7 @@ class MyDataEncodeFormModel(models.Model):
     cell = models.CharField(max_length=20)
     method = models.CharField(max_length=20)
     session_id = models.CharField(max_length=100)
+    max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1)
     mydata = models.FileField(upload_to="uploaded/")
 
 class AnalysisResults(models.Model):

@@ -49,6 +49,7 @@ class MyDataEncodeParameterForm(forms.ModelForm):
 
         labels = {
             'mydata' : 'Upload your dataset here',
+            'max_dist' : 'Maximum distance in couples [bp]'
         }
 
 

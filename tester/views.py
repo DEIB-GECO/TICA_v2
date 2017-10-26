@@ -64,6 +64,7 @@ def test_results_mydata_encode(request):
         cell = request.POST['cell']
         method = request.POST['method']
         session_id = create_session_id(request)
+        max_dist = request.POST['max_dist']
 
         form = MyDataEncodeParameterForm(request.POST, request.FILES)
         form.set_initial_values(cell,
@@ -73,7 +74,8 @@ def test_results_mydata_encode(request):
             newdoc = MyDataEncodeFormModel(cell=cell,
                                            method=method,
                                            session_id=session_id,
-                                           mydata=request.FILES['mydata'])
+                                           mydata=request.FILES['mydata'],
+                                           max_dist=max_dist)
             newdoc.save()
             pid = os.fork()
             if pid == 0:
