@@ -161,6 +161,13 @@ TEST_DATA = '/Volumes/PERNA/ENCODE_data_4_tests/'
 #print(tfs)
 ## USER-GUIDED WORKFLOW
 
+
+from tester.min_dist import *
+
+
+
+
+
 input_zip = 'test2.zip'
 cell_line = 'HepG2'
 tss_file = 'active_tsses.bed'
@@ -186,4 +193,4 @@ print(tfs)
 your_maps = pipeline_steps.tfbs2tss_mapper(materialized_files, tfs, tss_file,
                                            target_folder='ciao/')
 
-pipeline_steps.compute_mindist('ciao/','HepG2',2200)
+compute_min_distance('session_id', 'ciao/', 'ciao/','hepg2', 2200)

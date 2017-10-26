@@ -7,18 +7,12 @@ from queue import Empty
 
 # definitions
 
-directory = 'ciao/'
-
-max_distance = 2200
-
-# TODO remove
-result_file = "results/result_file_par.txt"
-result_file_merged = "results/result_file_merged_par.txt"
-
-infinity = max_distance * 100 - 1
+infinity = 10000 * 100 - 1
 
 # list of chromosome
 chromosome_list = ["chr" + str(i + 1) for i in range(22)] + ["chrx"]
+
+MAX_CPU = 8
 
 
 # class definitions
@@ -149,19 +143,36 @@ def linear_merge_distance(list1, list2):
             return
 
 
-lock = Lock()
+class Consumer(multiprocessing.Process):
+    def __init__(self, task_queue, result_queue, session_id, max_distance, directory1, directory2):
+        multiprocessing.Process.__init__(self)
+        self.task_queue = task_queue
+        self.result_queue = result_queue
+        self.session_id = session_id
+        self.max_distance = max_distance
+        self.directory1 = directory1
+        self.directory2 = directory2
 
-list_of_tf = []
+    def run(self):
+        tfs = dict()
+        process_name = self.name
+        # print('%s' % process_name)
+        while True:
+            next_task = self.task_queue.get()
+            if next_task is None:
+                # Poison pill means shutdown
+                # print('%s: Exiting' % process_name)
+                self.task_queue.task_done()
+                break
+            # print('%s: %s' % (process_name, next_task))
+            answer = next_task(tfs, self.session_id, self.max_distance, self.directory1, self.directory2)
+            self.task_queue.task_done()
+            self.result_queue.put(answer)
+        return
 
-for (dir_path, dir_names, file_names) in walk(directory):
-    list_of_tf.extend(file_names)
-    break
 
-
-print("List of tfs:", list_of_tf)
-
-
-def read(tf):
+def read(tf, directory):
+    # print("READ: ", target_directory + tf)
     temp_tf = defaultdict(list)
     for line in open(directory + tf):
         s = line.strip().split("\t")
@@ -178,99 +189,11 @@ def read(tf):
     return temp_tf2
 
 
-def get_tfs(tf, tfs):
-    if tf not in tfs:
-        tfs[tf] = read(tf)
-    return tfs[tf]
-
-
-def calculate_distances(inp, tfs):
-    (tf1, tf2) = inp
-    temp_count_all = defaultdict(int)
-    temp_count_tss = defaultdict(int)
-
-    count_tss = 0
-
-    distances = []
-
-    tf1r_dict = get_tfs(tf1, tfs)
-    tf2r_dict = get_tfs(tf2, tfs)
-    # out_file = open("results2/" + tf1 + "-" + tf2 + ".txt", "w")
-
-    for c in chromosome_list:
-        tf1r = tf1r_dict[c]
-        tf2r = tf2r_dict[c]
-
-        merged_distances = linear_merge_distance(tf1r, tf2r)
-        pre_distance = next(merged_distances)
-        curr_distance = next(merged_distances)
-        for postDistance in merged_distances:
-            if curr_distance.distance <= max_distance and curr_distance.distance <= pre_distance.distance and curr_distance.distance <= postDistance.distance:
-                # TODO remove
-                # out_file.write("\t".join([tf1, tf2, str(curr_distance.distance), str(int(bool(curr_distance.intersectTssList)))]) + "\n")
-                # out_file.flush()
-
-                temp_count_all[curr_distance.distance] += 1
-                distances.append(curr_distance.distance)
-                if curr_distance.intersect_tss_list:
-                    temp_count_tss[curr_distance.distance] += 1
-                    count_tss += 1
-            pre_distance = curr_distance
-            curr_distance = postDistance
-
-    cumulative_count_all = 0
-    cumulative_count_tss = 0
-    with lock:
-        for dist, count_all_temp in sorted(temp_count_all.items()):
-            count_tss_temp = temp_count_tss[dist]
-            cumulative_count_all += count_all_temp
-            cumulative_count_tss += count_tss_temp
-            out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all_temp), str(count_tss_temp), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
-        out_file_merged.flush()
-        # out_file.close()
-    count_all = len(distances)
-    if count_all > 0:
-        mean = statistics.mean(distances)
-        median = statistics.median(distances)
-        mad = statistics.median([abs(x - median) for x in distances])
-        tail1000 = len([x for x in distances if x >= 1000]) / count_all
-
-        tails = []
-        for i in range(11): # TODO range(1,10)
-            tails.append(len([x for x in distances if x >= max_distance*i/10]) / count_all)
-    
-    
-        #TODO other tails
-    
-        print("RESULT:", tf1, tf2, max_distance, count_all, count_tss, mean, median, mad, tail1000, tails)
-
-
-out_file = open(result_file, "w")
-out_file_merged = open(result_file_merged, "w")
-
-
-class Consumer(multiprocessing.Process):
-    def __init__(self, task_queue, result_queue):
-        multiprocessing.Process.__init__(self)
-        self.task_queue = task_queue
-        self.result_queue = result_queue
-
-    def run(self):
-        tfs = dict()
-        process_name = self.name
-        print('%s' % process_name)
-        while True:
-            next_task = self.task_queue.get()
-            if next_task is None:
-                # Poison pill means shutdown
-                print('%s: Exiting' % process_name)
-                self.task_queue.task_done()
-                break
-            print('%s: %s' % (process_name, next_task))
-            answer = next_task(tfs)
-            self.task_queue.task_done()
-            self.result_queue.put(answer)
-        return
+def get_tfs(tf, tfs, directory):
+    tf_id = "%s/%s" % (directory, tf)
+    if tf_id not in tfs:
+        tfs[tf_id] = read(tf, directory)
+    return tfs[tf_id]
 
 
 class Task(object):
@@ -278,30 +201,143 @@ class Task(object):
         self.tf1 = tf1
         self.tf2 = tf2
 
-    def __call__(self, tfs):
-        calculate_distances((self.tf1, self.tf2), tfs)
-        return '%s - %s' % (self.tf1, self.tf2)
+    def __call__(self, tfs, session_id, max_distance, directory1, directory2):
+        self.session_id = session_id
+        self.max_distance = max_distance
+        self.target_directory1 = directory1
+        self.target_directory2 = directory2
+
+        return self.calculate_distances((self.tf1, self.tf2), tfs)
 
     def __str__(self):
         return '%s - %s' % (self.tf1, self.tf2)
 
+    def calculate_distances(self, inp, tfs):
+        (tf1, tf2) = inp
+        res = dict()
+        res['tf1'] = tf1
+        res['tf2'] = tf2
+        res['max_distance'] = self.max_distance
 
-if __name__ == '__main__':
+        temp_count_all = defaultdict(int)
+        temp_count_tss = defaultdict(int)
+
+        count_tss = 0
+
+        distances = []
+
+        tf1r_dict = get_tfs(tf1, tfs, self.target_directory1)
+        tf2r_dict = get_tfs(tf2, tfs, self.target_directory2)
+        # out_file = open("results2/" + tf1 + "-" + tf2 + ".txt", "w")
+
+        for c in chromosome_list:
+            tf1r = tf1r_dict[c]
+            tf2r = tf2r_dict[c]
+
+            merged_distances = linear_merge_distance(tf1r, tf2r)
+            pre_distance = next(merged_distances)
+            curr_distance = next(merged_distances)
+            for postDistance in merged_distances:
+                if curr_distance.distance <= self.max_distance and curr_distance.distance <= pre_distance.distance and curr_distance.distance <= postDistance.distance:
+                    # TODO remove
+                    # out_file.write("\t".join([tf1, tf2, str(curr_distance.distance), str(int(bool(curr_distance.intersectTssList)))]) + "\n")
+                    # out_file.flush()
+
+                    temp_count_all[curr_distance.distance] += 1
+                    distances.append(curr_distance.distance)
+                    if curr_distance.intersect_tss_list:
+                        temp_count_tss[curr_distance.distance] += 1
+                        count_tss += 1
+                pre_distance = curr_distance
+                curr_distance = postDistance
+
+        cumulative_count_all = 0
+        cumulative_count_tss = 0
+        # with lock:
+        #     for dist, count_all_temp in sorted(temp_count_all.items()):
+        #         count_tss_temp = temp_count_tss[dist]
+        #         cumulative_count_all += count_all_temp
+        #         cumulative_count_tss += count_tss_temp
+        #         out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all_temp), str(count_tss_temp), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
+        #     out_file_merged.flush()
+        # out_file.close()
+        count_all = len(distances)
+        if count_all > 0:
+            res['count_all'] = count_all
+            res['count_tss'] = count_tss
+            res['average'] = statistics.mean(distances)
+            res['median'] = statistics.median(distances)
+            res['mad'] = statistics.median([abs(x - res['median']) for x in distances])
+            res['tail_1000'] = len([x for x in distances if x >= 1000]) / count_all
+
+            for i in range(11):
+                res['tail_%02.d' % i] = len([x for x in distances if x >= self.max_distance * i / 10]) / count_all
+
+
+
+                # TODO other tails
+
+                # print("RESULT:\t\t\t\t\t", self.session_id, tf1, tf2, res)
+        return res
+
+
+def compute_min_distance(session_id, target_directory1='ciao/', target_directory2='ciao/',
+                         cell_line='hepg2', max_distance=2200):  # +a list of parameters
+    """Computes the min_distance couple distance distributions given
+    two TFBS datasets and returns a null table Model row for
+    insertion.
+
+    Keyword arguments:
+        -- ds1, ds2: GMQLDatasets containing binding sites for each TF
+        and maps to TSS
+        -- use_tsses: defines whether the algorithm should search for
+        colocation in promoters. Use False for null distributions.
+        (default: True)"""
+
+    is_same = (target_directory1 == target_directory2)
+
+    # TODO remove
+    # result_file = "results/result_file_par.txt"
+    # result_file_merged = "results/result_file_merged_par.txt"
+
+    # lock = Lock()
+
+    list_of_tf1 = []
+
+    for (dir_path, dir_names, file_names) in walk(target_directory1):
+        list_of_tf1.extend(file_names)
+        break
+
+    print("List of tfs1:", list_of_tf1)
+
+    if is_same:
+        list_of_tf2 = list_of_tf1
+    else:
+        list_of_tf2 = []
+        for (dir_path, dir_names, file_names) in walk(target_directory2):
+            list_of_tf2.extend(file_names)
+            break
+
+    print("List of tfs2:", list_of_tf2)
+
     # Establish communication queues
     tasks = multiprocessing.JoinableQueue()
     results = multiprocessing.Queue()
 
     # Start consumers
-    num_consumers = min(1, int(multiprocessing.cpu_count()))
+    num_consumers = min(MAX_CPU, int(multiprocessing.cpu_count()))
     print('Creating %d consumers' % num_consumers)
-    consumers = [Consumer(tasks, results) for i in range(num_consumers)]
+    consumers = [Consumer(tasks, results, session_id, max_distance, target_directory1, target_directory2) for i in range(num_consumers)]
     # consumers = [Consumer(tasks, results)]
 
     for w in consumers:
         w.start()
 
     # Enqueue jobs
-    for (tf1, tf2) in [(tf1, tf2) for tf1 in list_of_tf for tf2 in list_of_tf if tf1 < tf2]:
+    traverse = [(tf1, tf2) for tf1 in list_of_tf1 for tf2 in list_of_tf2 if tf1 != tf2]
+    if is_same:
+        traverse = filter(lambda x: x[0] < x[1], traverse)
+    for (tf1, tf2) in traverse:
         tasks.put(Task(tf1, tf2))
     print("all tasks added")
 
@@ -328,6 +364,3 @@ if __name__ == '__main__':
         result = results.get()
         count += 1
         print('\t\t\tB Count: ', count, ' - Result:', result)
-
-    out_file_merged.close()
-    out_file.close()
