@@ -6,7 +6,9 @@ from django_tables2 import RequestConfig
 import os
 import time
 import json
+from django.db import connections
 
+from tester.pipeline_controller import *
 
 # Create your views here.
 def create_session_id(request):
@@ -44,11 +46,10 @@ def param_input(request):
     return render(request, "tester/param_input.html", context=context)
 
 
-def child(session_id):
-    aaa = [x.session_id for x in list(MyDataEncodeFormModel.objects.all())]
 
-    print("\n\n\n\n\n\nchild\n\n\n\n\n", aaa, type(aaa), session_id, "\n\n\n\n\n\nchild\n\n\n\n\n")
-    os._exit(0)
+def child(session_id):
+    pipeline_controller(session_id)
+
 
 
 def test_results(request):
@@ -77,9 +78,12 @@ def test_results_mydata_encode(request):
                                            mydata=request.FILES['mydata'],
                                            max_dist=max_dist)
             newdoc.save()
+
+            connections.close_all()
+
             pid = os.fork()
             if pid == 0:
-                child(request.POST['session_id'])
+                child(session_id)
                 return
 
         else:

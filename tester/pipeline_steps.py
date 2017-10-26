@@ -9,10 +9,10 @@ TF which they contain.
 Author: Stefano Perna (stefano.perna@polimi.it)
 Date: 18 October 2017
 Version: 0.1"""
-#from models import *
+# from models import *
 from django.forms.models import model_to_dict
 from django.db.models import Q
-#from tester.models import *
+# from tester.models import *
 
 import sys
 import gmql as pygmql
@@ -33,6 +33,7 @@ from queue import Empty
 # Chromosome names
 CHRS = list(map(lambda x: "chr" + str(x), range(1, 23))) + ["chrX"]
 STATIC_CACHE = dict()
+
 
 # Common functions
 # def __format_checker__(file):
@@ -83,55 +84,55 @@ STATIC_CACHE = dict()
 #             return 'BED2'
 #         else:
 #             return 'unknown_format'
-    
-    
+
+
 def data_uploader(input_zip, target_folder='path/to/default'):
     """Loads datasets from the disk and returns formatted GMQLDatasets.
     Keyword arguments:
         -- input_zip: path to zip file containing files, to be
         accessed on disk (default: None)
     """
-    
+
     # TMP
     TMP_FILE_PATH = 'tmp/'
     if not os.path.exists(TMP_FILE_PATH):
         os.makedirs(TMP_FILE_PATH)
-        
+
     assert input_zip, "ERROR: no input file. Aborting."
-    
+
     if not os.path.exists(target_folder):
         os.makedirs(target_folder)
-        
-    with zipfile.ZipFile(input_zip,'r') as zip_ref:
+
+    with zipfile.ZipFile(input_zip, 'r') as zip_ref:
         zip_ref.extractall(TMP_FILE_PATH)
-    
+
     # Assume the zip folder contains one folder for each TF - no enclosing
     # folder.
     tf_folder = list(os.walk(TMP_FILE_PATH))
-    
-    #childs = [item for item in tf_folder[0][1] if not item.startswith('__')]
-    
-    #if not list(os.walk('%s/%s/' % (TMP_FILE_PATH, childs[0])))[0][2]:
+
+    # childs = [item for item in tf_folder[0][1] if not item.startswith('__')]
+
+    # if not list(os.walk('%s/%s/' % (TMP_FILE_PATH, childs[0])))[0][2]:
     #    tf_folder=list(os.walk('%s/%s' % (TMP_FILE_PATH,
     #                                      tf_folder[0][1][-1])))
-    #print(tf_folder)
-    
+    # print(tf_folder)
+
     tf_list = list(filter(lambda s: not s.startswith('__'), tf_folder[0][1]))
-    
-    for tf in tf_list:     # They are also folder names
+
+    for tf in tf_list:  # They are also folder names
         for (dir, _, files) in os.walk('%s%s' % (TMP_FILE_PATH, tf)):
             for index, file in enumerate(
                     [item for item in files if not item.startswith('.')
-                     and '.meta' not in item]
+                    and '.meta' not in item]
             ):
                 shutil.copy('%s/%s' % (dir, file), '%s/%s_%d.bed' % (
                     target_folder, tf, index)
                             )
                 with open('%s/%s_%d.bed.meta' % (
-                    target_folder, tf, index),'w') as metafile:
+                        target_folder, tf, index), 'w') as metafile:
                     metafile.write('experiment_target\t%s\n' % tf)
     shutil.rmtree(TMP_FILE_PATH)
-    #os.remove(input_zip)
+    # os.remove(input_zip)
     return tf_list
 
 
@@ -147,17 +148,17 @@ def tfbs_filter(tfbs_data, tf_list, window_size=1000, min_acc_value=3):
     """
     # Assume tf_list is sorted
     # Assume that input is loaded
-    
+
     # ds_list = []
     #
     # for index in range(len(tf_list)):
     #     ds_list.append(datasets[index].to_GMQLDataset())
-    
+
     # # First process the simple ones in batch
     # tfbs_data = datasets[0]
     # for df in datasets[1:]:
     #     tfbs_data = tfbs_data.union(df)
-    
+
     tfbs_data.materialize('input_banane-1/')
     npeaks = tfbs_data.reg_project(
         new_field_dict={
@@ -168,7 +169,7 @@ def tfbs_filter(tfbs_data, tf_list, window_size=1000, min_acc_value=3):
     # NOTE: groupBy must be given in list format
     covered = npeaks.cover(1, 'ANY', groupBy=['experiment_target'])
     covered.materialize('cover_banane1/')
-    signals = covered # Is it the same as copying?
+    signals = covered  # Is it the same as copying?
     # Enlarge by moving window
     windows = covered.reg_project(new_field_dict={'start': covered.start
                                                            - window_size,
@@ -186,7 +187,7 @@ def tfbs_filter(tfbs_data, tf_list, window_size=1000, min_acc_value=3):
 
     # For testing purposes
     # filtered_signals.materialize(output_path='simple_tfs/')
-    
+
     return filtered_signals
 
 
@@ -212,15 +213,14 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
             for c in CHRS
         ]
     )
-    
-    
+
     to_execute = zip(target_list, tfbs_file_list)
     for item in to_execute:
         tfbses_raw_0 = pd.read_csv(item[1],
-                                 sep='\t', header=None)
+                                   sep='\t', header=None)
         tfbses_raw_v = [item.tolist() for item in tfbses_raw_0.values]
         tfbses_raw_in = tfbses_raw_0.index
-        
+
         tfbses_raw = list(zip(tfbses_raw_in, tfbses_raw_v))
         tfbses = dict(
             [
@@ -241,20 +241,20 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
                       for tfbs in f_tfbses]
             associated_tss += c_map_
         print(associated_tss)
+        os.makedirs(target_folder, exist_ok=True)
         with open('%s/%s_TFBS_w_MAPS.tsv' %
                           (target_folder, item[0]), 'w') \
                 as associated_outfile:
-            
+
             associated_outfile.writelines(
                 ['%s\t%d\t%s\n' %
                  (item[0], item[1], ','.join([str(tss_id)
-                                     for tss_id in sorted(
+                                              for tss_id in sorted(
                          [data[2] for data in list(item[2])])])
                  if list(item[2]) else '')
                  for item in associated_tss])
         print('Map complete.')
     return True
-
 
 
 # Algorithmic workflow-only
@@ -279,15 +279,13 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
         -- min_tfbs_count: minimum number of TFBSes from the same cell
         to be found in the promoter of a valid TSS (default: 50)
     """
-    
+
     # paths to ENCODE datasets
     BROAD_PATH = '/Volumes/PERNA/ENC_broad_Aug_2017/'
     NARROW_PATH = '/Volumes/PERNA/ENC_narrow_Aug_2017/'
 
-
     # for testing purposes
     OUTFILE_PATH = 'test_2/'
-
 
     # Data loading
     enc_broad_full = pygmql.load_from_path(
@@ -331,7 +329,7 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
         & (enc_broad_full['biosample_term_name'] == cell_name)
         & (enc_broad_full['experiment_target'] == 'H3K4me1-human')
         ]
-    
+
     # print('# Extract narrowpeaks.')
     hepg2_narrow_df_list = []
     for tf in list_of_targets:
@@ -377,7 +375,7 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
             )
         exons_on_hms = exons.map(hm_4_exons,
                                  refName='exons', expName='hm_4_exons')
-    
+
         f_exons = exons_on_hms.reg_select(
             exons_on_hms.count_exons_hm_4_exons != 0
         )
@@ -428,7 +426,6 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
                                         + promoter_length}
             )
 
-
         # print('# Map promoters on narrowpeaks.')
         mapped_promoters = f_new_promoters.map(merged_npeaks,
                                                refName='f_new_promoters',
@@ -464,7 +461,6 @@ def tss_filter(tss_file_path, cell_name, list_of_targets,
     return both_strands_res
 
 
-
 # User-guided workflow-only
 def __get_tf_list__(cell):
     """Ancillary function to check_tfs. Returns the list of all
@@ -474,9 +470,10 @@ def __get_tf_list__(cell):
     return CellLineTfs.objects.filter(cell_line=cell).values_list(
         'tf', flat=True)
 
+
 def output_results(candidate, input_cell, max_distance=2200,
-                   tail_size=1000,min_tss=0.01,
-                   min_count=1,p_value=0.2,
+                   tail_size=1000, min_tss=0.01,
+                   min_count=1, p_value=0.2,
                    min_num_true_test=3,
                    test_list=('average', 'mad', 'median', 'tail_1000')):
     """Checks whether a candidate passes the TICA workflow tests
@@ -488,7 +485,7 @@ def output_results(candidate, input_cell, max_distance=2200,
     all_tfs = sorted(list(__get_tf_list__()))
     calculated_null = compute_nulls(i_cell=input_cell)
     temp_null = calculated_null[max_distance]
-    
+
     result = []
     for tf in all_tfs:
         if tf == candidate:
@@ -515,7 +512,7 @@ def output_results(candidate, input_cell, max_distance=2200,
         if line.cumulative_count_all < min_count:
             continue
 
-        if line.cumulative_count_tss/line.cumulative_count_all < min_tss:
+        if line.cumulative_count_tss / line.cumulative_count_all < min_tss:
             continue
 
         # start stat testing

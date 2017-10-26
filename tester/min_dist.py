@@ -4,6 +4,9 @@ from collections import defaultdict
 from multiprocessing import Lock, Process
 from os import walk
 from queue import Empty
+from tester.models import *
+
+from django.db import connections
 
 # definitions
 
@@ -282,7 +285,7 @@ class Task(object):
 
 
 def compute_min_distance(session_id, target_directory1='ciao/', target_directory2='ciao/',
-                         cell_line='hepg2', max_distance=2200):  # +a list of parameters
+                         max_distance=2200):  # +a list of parameters
     """Computes the min_distance couple distance distributions given
     two TFBS datasets and returns a null table Model row for
     insertion.
@@ -293,6 +296,8 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
         -- use_tsses: defines whether the algorithm should search for
         colocation in promoters. Use False for null distributions.
         (default: True)"""
+
+    print(AnalysisResults.objects.count())
 
     is_same = (target_directory1 == target_directory2)
 
@@ -351,6 +356,7 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
     while not tasks.empty():
         try:
             result = results.get(timeout=1)
+            save_to_db(session_id, result)
             count += 1
             print('\t\t\tA Count: ', count, ' - Result:', result)
         except Empty:
@@ -362,5 +368,33 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
     # Start printing results
     while not results.empty():
         result = results.get()
+        save_to_db(session_id, result)
         count += 1
         print('\t\t\tB Count: ', count, ' - Result:', result)
+
+
+def save_to_db(session_id, value_dict):
+    new_result = AnalysisResults()
+    new_result.session_id = session_id
+    new_result.tf1 = value_dict['tf1']
+    new_result.tf2 = value_dict['tf2']
+    new_result.max_distance = value_dict['max_distance']
+
+    new_result.average = value_dict.get('average')
+    new_result.median = value_dict.get('median')
+    new_result.mad = value_dict.get('mad')
+
+    new_result.tail_00 = value_dict.get('tail_00')
+    new_result.tail_01 = value_dict.get('tail_01')
+    new_result.tail_02 = value_dict.get('tail_02')
+    new_result.tail_03 = value_dict.get('tail_03')
+    new_result.tail_04 = value_dict.get('tail_04')
+    new_result.tail_05 = value_dict.get('tail_05')
+    new_result.tail_06 = value_dict.get('tail_06')
+    new_result.tail_07 = value_dict.get('tail_07')
+    new_result.tail_08 = value_dict.get('tail_08')
+    new_result.tail_09 = value_dict.get('tail_09')
+    new_result.tail_10 = value_dict.get('tail_10')
+
+    new_result.tail_1000 = value_dict.get('tail_1000')
+    new_result.save()
