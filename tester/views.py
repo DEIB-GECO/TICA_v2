@@ -52,7 +52,7 @@ def child(session_id):
 
 
 def test_results(request):
-    method = request.GET['method']
+    method = request.GET['method'] if request.method == 'GET' else request.POST['method']
     if method == 'encode':
         return test_results_encode(request)
     elif method == 'mydata_encode':
