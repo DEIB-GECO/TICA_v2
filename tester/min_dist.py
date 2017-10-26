@@ -7,9 +7,9 @@ from queue import Empty
 
 # definitions
 
-directory = 'cutted_joined/'
+directory = 'ciao/'
 
-max_distance = 1100
+max_distance = 2200
 
 # TODO remove
 result_file = "results/result_file_par.txt"
@@ -157,14 +157,7 @@ for (dir_path, dir_names, file_names) in walk(directory):
     list_of_tf.extend(file_names)
     break
 
-list_of_tf = [
-    "ARID3A",
-    "MYC",
-    "ATF1",
-    # "ATF3",
-    # "ATF4",
-    # "BHLHE40"
-]
+
 print("List of tfs:", list_of_tf)
 
 
@@ -173,7 +166,7 @@ def read(tf):
     for line in open(directory + tf):
         s = line.strip().split("\t")
         # TODO change location
-        tss_val = s[3] if len(s) >= 2 else None
+        tss_val = s[2] if len(s) > 2 else None
         tss_val = tss_val if tss_val != '-1' else None
         tss = set([int(t) for t in tss_val.split(",")]) if tss_val else None
         c = s[0].lower()
@@ -235,21 +228,21 @@ def calculate_distances(inp, tfs):
             out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all_temp), str(count_tss_temp), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
         out_file_merged.flush()
         # out_file.close()
-
     count_all = len(distances)
-    mean = statistics.mean(distances)
-    median = statistics.median(distances)
-    mad = statistics.median([abs(x - median) for x in distances])
-    tail1000 = len([x for x in distances if x >= 1000]) / count_all
+    if count_all > 0:
+        mean = statistics.mean(distances)
+        median = statistics.median(distances)
+        mad = statistics.median([abs(x - median) for x in distances])
+        tail1000 = len([x for x in distances if x >= 1000]) / count_all
 
-    tails = []
-    for i in range(11): # TODO range(1,10)
-        tails.append(len([x for x in distances if x >= max_distance*i/10]) / count_all)
-
-
-    #TODO other tails
-
-    print("RESULT:", tf1, tf2, max_distance, count_all, count_tss, mean, median, mad, tail1000, tails)
+        tails = []
+        for i in range(11): # TODO range(1,10)
+            tails.append(len([x for x in distances if x >= max_distance*i/10]) / count_all)
+    
+    
+        #TODO other tails
+    
+        print("RESULT:", tf1, tf2, max_distance, count_all, count_tss, mean, median, mad, tail1000, tails)
 
 
 out_file = open(result_file, "w")

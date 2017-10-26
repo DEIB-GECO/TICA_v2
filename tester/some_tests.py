@@ -185,3 +185,5 @@ tfs = [list(map(lambda s: s.strip().split('\t')[1], open('new_test_attempt_2/exp
 print(tfs)
 your_maps = pipeline_steps.tfbs2tss_mapper(materialized_files, tfs, tss_file,
                                            target_folder='ciao/')
+
+pipeline_steps.compute_mindist('ciao/','HepG2',2200)
