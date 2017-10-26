@@ -1,15 +1,15 @@
 import multiprocessing
+import statistics
 from collections import defaultdict
 from multiprocessing import Lock, Process
 from os import walk
-
 from queue import Empty
 
 # definitions
 
 directory = 'cutted_joined/'
 
-max_distance = 10000
+max_distance = 1100
 
 # TODO remove
 result_file = "results/result_file_par.txt"
@@ -157,15 +157,14 @@ for (dir_path, dir_names, file_names) in walk(directory):
     list_of_tf.extend(file_names)
     break
 
-
-# list_of_tf = [
-#     "ARID3A",
-#     # "MYC",
-#     # "ATF1",
-#     # "ATF3",
-#     # "ATF4",
-#     # "BHLHE40"
-# ]
+list_of_tf = [
+    "ARID3A",
+    "MYC",
+    "ATF1",
+    # "ATF3",
+    # "ATF4",
+    # "BHLHE40"
+]
 print("List of tfs:", list_of_tf)
 
 
@@ -196,6 +195,11 @@ def calculate_distances(inp, tfs):
     (tf1, tf2) = inp
     temp_count_all = defaultdict(int)
     temp_count_tss = defaultdict(int)
+
+    count_tss = 0
+
+    distances = []
+
     tf1r_dict = get_tfs(tf1, tfs)
     tf2r_dict = get_tfs(tf2, tfs)
     # out_file = open("results2/" + tf1 + "-" + tf2 + ".txt", "w")
@@ -204,31 +208,48 @@ def calculate_distances(inp, tfs):
         tf1r = tf1r_dict[c]
         tf2r = tf2r_dict[c]
 
-        distances = linear_merge_distance(tf1r, tf2r)
-        pre_distance = next(distances)
-        curr_distance = next(distances)
-        for postDistance in distances:
+        merged_distances = linear_merge_distance(tf1r, tf2r)
+        pre_distance = next(merged_distances)
+        curr_distance = next(merged_distances)
+        for postDistance in merged_distances:
             if curr_distance.distance <= max_distance and curr_distance.distance <= pre_distance.distance and curr_distance.distance <= postDistance.distance:
                 # TODO remove
                 # out_file.write("\t".join([tf1, tf2, str(curr_distance.distance), str(int(bool(curr_distance.intersectTssList)))]) + "\n")
                 # out_file.flush()
 
                 temp_count_all[curr_distance.distance] += 1
+                distances.append(curr_distance.distance)
                 if curr_distance.intersect_tss_list:
                     temp_count_tss[curr_distance.distance] += 1
+                    count_tss += 1
             pre_distance = curr_distance
             curr_distance = postDistance
 
     cumulative_count_all = 0
     cumulative_count_tss = 0
     with lock:
-        for dist, count_all in sorted(temp_count_all.items()):
-            count_tss = temp_count_tss[dist]
-            cumulative_count_all += count_all
-            cumulative_count_tss += count_tss
-            out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all), str(count_tss), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
+        for dist, count_all_temp in sorted(temp_count_all.items()):
+            count_tss_temp = temp_count_tss[dist]
+            cumulative_count_all += count_all_temp
+            cumulative_count_tss += count_tss_temp
+            out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all_temp), str(count_tss_temp), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
         out_file_merged.flush()
         # out_file.close()
+
+    count_all = len(distances)
+    mean = statistics.mean(distances)
+    median = statistics.median(distances)
+    mad = statistics.median([abs(x - median) for x in distances])
+    tail1000 = len([x for x in distances if x >= 1000]) / count_all
+
+    tails = []
+    for i in range(11): # TODO range(1,10)
+        tails.append(len([x for x in distances if x >= max_distance*i/10]) / count_all)
+
+
+    #TODO other tails
+
+    print("RESULT:", tf1, tf2, max_distance, count_all, count_tss, mean, median, mad, tail1000, tails)
 
 
 out_file = open(result_file, "w")
@@ -278,7 +299,7 @@ if __name__ == '__main__':
     results = multiprocessing.Queue()
 
     # Start consumers
-    num_consumers = min(8, int(multiprocessing.cpu_count()))
+    num_consumers = min(1, int(multiprocessing.cpu_count()))
     print('Creating %d consumers' % num_consumers)
     consumers = [Consumer(tasks, results) for i in range(num_consumers)]
     # consumers = [Consumer(tasks, results)]
