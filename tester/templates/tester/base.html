@@ -1,11 +1,17 @@
 {% load bootstrap4 %}
+{% load static %}
 <html>
 <head>
     <meta charset="UTF-8">
     <title>TICA v2</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <link rel="stylesheet"  href="{% static 'django_tables2/themes/paleblue/css/screen.css' %}" />
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     {% bootstrap_messages %}
+    <script src="{% static "tester/scripts/chartjs/dst/Chart.HeatMap.S.js" %}"></script>
+
 </head>
 <body>
 

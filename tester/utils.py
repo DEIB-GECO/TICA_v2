@@ -100,7 +100,12 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
             null_value = temp_null[test_name]
             if line_null_dict[i] is not None and line_null_dict[i] <= null_value:
                 passed.append(i)
+                scores[i+"_passed"] = "Passed"
+            else:
+                scores[i+"_passed"] = "Failed"
             scores[i] = line_null_dict[i]
+
+        scores['num_passed'] = len(passed)
         if (min_num_true_test <= len(passed)):
             pass
         result.append(scores)

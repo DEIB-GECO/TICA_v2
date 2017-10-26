@@ -5,6 +5,7 @@ import django_tables2 as tables
 from django_tables2 import RequestConfig
 import os
 import time
+import json
 
 # Create your views here.
 def create_session_id(request):
@@ -85,24 +86,29 @@ def test_results_encode(request):
     num_min = int(request.GET['num_min'])
     num_min_w_tsses = float(request.GET['num_min_w_tsses'])
 
-    all_fields = set(['average', 'median', 'mad', 'tail_1000'])
+    all_tests = ['average', 'median', 'mad', 'tail_1000']
+    all_fields = set(all_tests).union([x+"_passed" for x in all_tests])
     wanted_tests = list(map(lambda s: s.replace('wants_', ''), which_tests))
-    not_shown = list(all_fields.difference(set(wanted_tests)))
+    not_shown = list(all_fields.difference(set(wanted_tests))
+                     .difference(set([x+"_passed" for x in wanted_tests])))
 
     class NameTable(tables.Table):
         name_tf1 = tables.Column()
         name_tf2 = tables.Column()
         average = tables.Column()
+        average_passed = tables.Column()
         median = tables.Column()
+        median_passed = tables.Column()
         mad = tables.Column()
+        mad_passed = tables.Column()
         tail_1000 = tables.Column()
+        tail_1000_passed = tables.Column()
 
         class Meta():
             exclude = not_shown
             attrs = {'class': 'paleblue'}
 
-    table = NameTable(
-        utils.check_tf2(cell,
+    analysis_results = utils.check_tf2(cell,
                         tf1,
                         tf2,
                         max_dist,
@@ -112,7 +118,23 @@ def test_results_encode(request):
                         pvalue,
                         min_test_num,
                         wanted_tests)
-    )
+
+    table = NameTable(analysis_results)
+
+    heatmap_pairs = {}
+    for r in analysis_results:
+        heatmap_pairs[(r['name_tf1'], r['name_tf2'])]  = r['num_passed']
+
+    list_tf1_r = list(sorted(list(set([x[0] for x in heatmap_pairs.keys()]))))
+    list_tf2_r = list(sorted(list(set([x[1] for x in heatmap_pairs.keys()]))))
+
+    json_datasets = []
+    for t1 in list_tf1_r:
+        values = [heatmap_pairs.get((t1,t2), -1) for t2 in list_tf2_r]
+        dataset = {'label': t1, 'data' : values}
+        json_datasets.append(dataset)
+
+    data_json = str(json.dumps({'labels': list_tf2_r, 'datasets' : json_datasets}))
 
     RequestConfig(request).configure(table)
     context = {
@@ -126,6 +148,7 @@ def test_results_encode(request):
         'min_test_num': min_test_num,
         'pvalue': pvalue,
         'table': table,
+        'heatmap' : data_json,
     }
 
     return render(request, 'tester/test_results.html', context)
