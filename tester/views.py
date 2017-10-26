@@ -7,16 +7,16 @@ import os
 import time
 import json
 
+
 # Create your views here.
 def create_session_id(request):
     ip = str(request.META.get('REMOTE_ADDR'))
     ts = str(time.time())
 
-    return (ip + "_" + ts).replace('.','_')
+    return (ip + "_" + ts).replace('.', '_')
 
 
 def index(request):
-
     form = CellMethodForm()
     context = {
         'form': form,
@@ -30,24 +30,24 @@ def param_input(request):
 
     form = None
     if method == 'encode':
-        form = EncodeParameterForm(cell,method)
+        form = EncodeParameterForm(cell, method)
     elif method == 'mydata_encode':
         form = MyDataEncodeParameterForm()
-        form.set_initial_values(cell,method,create_session_id(request))
+        form.set_initial_values(cell, method, create_session_id(request))
     elif method == 'mydata_mydata':
         pass
 
     context = {
-        'form' : form,
-        'http_method' : 'get' if method == 'encode' else 'post'
+        'form': form,
+        'http_method': 'get' if method == 'encode' else 'post'
     }
     return render(request, "tester/param_input.html", context=context)
 
 
 def child(session_id):
+    aaa = [x.session_id for x in list(MyDataEncodeFormModel.objects.all())]
 
-    aaa = Hepg2.objects.first()
-    print("\n\n\n\n\n\nchild\n\n\n\n\n", aaa, type(aaa), session_id)
+    print("\n\n\n\n\n\nchild\n\n\n\n\n", aaa, type(aaa), session_id, "\n\n\n\n\n\nchild\n\n\n\n\n")
     os._exit(0)
 
 
@@ -61,16 +61,27 @@ def test_results(request):
 
 def test_results_mydata_encode(request):
     if request.method == 'POST':
+        cell = request.POST['cell']
+        method = request.POST['method']
+        session_id = create_session_id(request)
+
         form = MyDataEncodeParameterForm(request.POST, request.FILES)
-        form.set_initial_values(request.POST['cell'],
-                                request.POST['method'],
-                                request.POST['session_id'])
+        form.set_initial_values(cell,
+                                method,
+                                session_id)
         if form.is_valid():
-            newdoc = MyDataEncodeFormModel(mydata=request.FILES['mydata'])
-            newdoc.mydata.upload_to = "uploaded/session_id/"
+            newdoc = MyDataEncodeFormModel(cell=cell,
+                                           method=method,
+                                           session_id=session_id,
+                                           mydata=request.FILES['mydata'])
             newdoc.save()
+            pid = os.fork()
+            if pid == 0:
+                child(request.POST['session_id'])
+                return
+
         else:
-            print("\n\n\n\n NOT VALID:",form.errors, "\n\n\n\n")
+            print("\n\n\n\n NOT VALID:", form.errors, "\n\n\n\n")
 
     return render(request, 'tester/job_status.html')
 
@@ -87,10 +98,10 @@ def test_results_encode(request):
     num_min_w_tsses = float(request.GET['num_min_w_tsses'])
 
     all_tests = ['average', 'median', 'mad', 'tail_1000']
-    all_fields = set(all_tests).union([x+"_passed" for x in all_tests])
+    all_fields = set(all_tests).union([x + "_passed" for x in all_tests])
     wanted_tests = list(map(lambda s: s.replace('wants_', ''), which_tests))
     not_shown = list(all_fields.difference(set(wanted_tests))
-                     .difference(set([x+"_passed" for x in wanted_tests])))
+                     .difference(set([x + "_passed" for x in wanted_tests])))
 
     class NameTable(tables.Table):
         name_tf1 = tables.Column()
@@ -109,32 +120,32 @@ def test_results_encode(request):
             attrs = {'class': 'paleblue'}
 
     analysis_results = utils.check_tf2(cell,
-                        tf1,
-                        tf2,
-                        max_dist,
-                        'not_used',
-                        num_min_w_tsses,
-                        num_min,
-                        pvalue,
-                        min_test_num,
-                        wanted_tests)
+                                       tf1,
+                                       tf2,
+                                       max_dist,
+                                       'not_used',
+                                       num_min_w_tsses,
+                                       num_min,
+                                       pvalue,
+                                       min_test_num,
+                                       wanted_tests)
 
     table = NameTable(analysis_results)
 
     heatmap_pairs = {}
     for r in analysis_results:
-        heatmap_pairs[(r['name_tf1'], r['name_tf2'])]  = r['num_passed']
+        heatmap_pairs[(r['name_tf1'], r['name_tf2'])] = r['num_passed']
 
     list_tf1_r = list(sorted(list(set([x[0] for x in heatmap_pairs.keys()]))))
     list_tf2_r = list(sorted(list(set([x[1] for x in heatmap_pairs.keys()]))))
 
     json_datasets = []
     for t1 in list_tf1_r:
-        values = [heatmap_pairs.get((t1,t2), -1) for t2 in list_tf2_r]
-        dataset = {'label': t1, 'data' : values}
+        values = [heatmap_pairs.get((t1, t2), -1) for t2 in list_tf2_r]
+        dataset = {'label': t1, 'data': values}
         json_datasets.append(dataset)
 
-    data_json = str(json.dumps({'labels': list_tf2_r, 'datasets' : json_datasets}))
+    data_json = str(json.dumps({'labels': list_tf2_r, 'datasets': json_datasets}))
 
     RequestConfig(request).configure(table)
     context = {
@@ -148,8 +159,7 @@ def test_results_encode(request):
         'min_test_num': min_test_num,
         'pvalue': pvalue,
         'table': table,
-        'heatmap' : data_json,
+        'heatmap': data_json,
     }
 
     return render(request, 'tester/test_results.html', context)
-

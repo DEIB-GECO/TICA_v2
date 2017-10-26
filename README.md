@@ -7,3 +7,7 @@ ssh -L 5433:localhost:5432 .....@genomic......
 
 ## Run
 ./manage.py runserver --insecure
+
+
+python3 manage.py makemigrations
+python3 manage.py migrate
