@@ -87,7 +87,11 @@ def test_results_mydata_encode(request):
         else:
             print("\n\n\n\n NOT VALID:", form.errors, "\n\n\n\n")
 
-    return render(request, 'tester/upload_response.html')
+    context = {
+        'my_path' : request.get_host() + "/tester/back_to_session/",
+        'session_id' : session_id
+    }
+    return render(request, 'tester/upload_response.html', context=context)
 
 
 def test_results_encode(request):
@@ -171,3 +175,21 @@ def test_results_encode(request):
 
 def back_to_session(request):
     session_id = request.GET['session_id']
+
+    session = MyDataEncodeFormModel.objects.filter(session_id=session_id)
+
+    context = {'session_id' : session_id}
+
+    if not session:
+        context['message'] = "Your session was not found :-("
+    elif session.count() > 1:
+        context['message'] = "Something went wrong, sorry :-( "
+    elif session.first().upload_status == 'PENDING':
+        context['message'] = "Still processing your file. "  + \
+                  "Please come back in a few minutes."
+    elif session.first().upload_status == 'FAIL':
+        context['message'] = "Something went wrong while processing you file :-("
+
+    return render(request, 'tester/user_session.html', context)
+
+
