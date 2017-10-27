@@ -1,12 +1,11 @@
 import multiprocessing
 import statistics
 from collections import defaultdict
-from multiprocessing import Lock, Process
+from multiprocessing import Process
 from os import walk
 from queue import Empty
-from tester.models import *
 
-from django.db import connections
+from tester.models import *
 
 # definitions
 
@@ -147,12 +146,12 @@ def linear_merge_distance(list1, list2):
 
 
 class Consumer(multiprocessing.Process):
-    def __init__(self, task_queue, result_queue, session_id, max_distance, directory1, directory2):
+    def __init__(self, task_queue, result_queue, session_id, max_distances, directory1, directory2):
         multiprocessing.Process.__init__(self)
         self.task_queue = task_queue
         self.result_queue = result_queue
         self.session_id = session_id
-        self.max_distance = max_distance
+        self.max_distances = max_distances
         self.directory1 = directory1
         self.directory2 = directory2
 
@@ -168,7 +167,7 @@ class Consumer(multiprocessing.Process):
                 self.task_queue.task_done()
                 break
             # print('%s: %s' % (process_name, next_task))
-            answer = next_task(tfs, self.session_id, self.max_distance, self.directory1, self.directory2)
+            answer = next_task(tfs, self.session_id, self.max_distances, self.directory1, self.directory2)
             self.task_queue.task_done()
             self.result_queue.put(answer)
         return
@@ -204,9 +203,9 @@ class Task(object):
         self.tf1 = tf1
         self.tf2 = tf2
 
-    def __call__(self, tfs, session_id, max_distance, directory1, directory2):
+    def __call__(self, tfs, session_id, max_distances, directory1, directory2):
         self.session_id = session_id
-        self.max_distance = max_distance
+        self.max_distances = max_distances
         self.target_directory1 = directory1
         self.target_directory2 = directory2
 
@@ -217,15 +216,13 @@ class Task(object):
 
     def calculate_distances(self, inp, tfs):
         (tf1, tf2) = inp
-        res = dict()
-        res['tf1'] = tf1
-        res['tf2'] = tf2
-        res['max_distance'] = self.max_distance
 
-        temp_count_all = defaultdict(int)
-        temp_count_tss = defaultdict(int)
+        max_distance = self.max_distances[0]
 
-        count_tss = 0
+        # temp_count_all = defaultdict(int)
+        # temp_count_tss = defaultdict(int)
+
+        # count_tss = 0
 
         distances = []
 
@@ -241,16 +238,18 @@ class Task(object):
             pre_distance = next(merged_distances)
             curr_distance = next(merged_distances)
             for postDistance in merged_distances:
-                if curr_distance.distance <= self.max_distance and curr_distance.distance <= pre_distance.distance and curr_distance.distance <= postDistance.distance:
+                if curr_distance.distance <= max_distance and curr_distance.distance <= pre_distance.distance and curr_distance.distance <= postDistance.distance:
                     # TODO remove
                     # out_file.write("\t".join([tf1, tf2, str(curr_distance.distance), str(int(bool(curr_distance.intersectTssList)))]) + "\n")
                     # out_file.flush()
 
-                    temp_count_all[curr_distance.distance] += 1
-                    distances.append(curr_distance.distance)
-                    if curr_distance.intersect_tss_list:
-                        temp_count_tss[curr_distance.distance] += 1
-                        count_tss += 1
+                    distances.append((curr_distance.distance, bool(curr_distance.intersect_tss_list)))
+
+
+                    # temp_count_all[curr_distance.distance] += 1
+                    # if curr_distance.intersect_tss_list:
+                    # temp_count_tss[curr_distance.distance] += 1
+                    # count_tss += 1
                 pre_distance = curr_distance
                 curr_distance = postDistance
 
@@ -264,28 +263,42 @@ class Task(object):
         #         out_file_merged.write("\t".join([tf1, tf2, str(dist), str(count_all_temp), str(count_tss_temp), str(cumulative_count_all), str(cumulative_count_tss)]) + "\n")
         #     out_file_merged.flush()
         # out_file.close()
-        count_all = len(distances)
-        if count_all > 0:
-            res['count_all'] = count_all
-            res['count_tss'] = count_tss
-            res['average'] = statistics.mean(distances)
-            res['median'] = statistics.median(distances)
-            res['mad'] = statistics.median([abs(x - res['median']) for x in distances])
-            res['tail_1000'] = len([x for x in distances if x >= 1000]) / count_all
 
-            for i in range(11):
-                res['tail_%02.d' % i] = len([x for x in distances if x >= self.max_distance * i / 10]) / count_all
+        results = []
+        for md in self.max_distances:
+            if md != max_distance:
+                distances = [dist for dist in distances if dist[0] <= md]
 
+            res = dict()
+            res['tf1'] = tf1
+            res['tf2'] = tf2
+            res['max_distance'] = md
 
+            count_all = len(distances)
+            count_tss = len([dist for dist in distances if dist[1]])
+            distances_first_values = [dist[0] for dist in distances]
 
-                # TODO other tails
+            if count_all > 0:
+                res['count_all'] = count_all
+                res['count_tss'] = count_tss
+                res['average'] = statistics.mean(distances_first_values)
+                res['median'] = statistics.median(distances_first_values)
+                res['mad'] = statistics.median([abs(x - res['median']) for x in distances_first_values])
+                res['tail_1000'] = len([x for x in distances_first_values if x >= 1000]) / count_all
 
-                # print("RESULT:\t\t\t\t\t", self.session_id, tf1, tf2, res)
-        return res
+                for i in range(11):
+                    res['tail_%02.d' % i] = len([x for x in distances_first_values if x >= md * i / 10]) / count_all
+
+            results.append(res)
+
+            # TODO other tails
+
+            # print("RESULT:\t\t\t\t\t", self.session_id, tf1, tf2, res)
+        return results
 
 
 def compute_min_distance(session_id, target_directory1='ciao/', target_directory2='ciao/',
-                         max_distance=2200):  # +a list of parameters
+                         max_distances=(5500, 2200, 1100)):  # +a list of parameters
     """Computes the min_distance couple distance distributions given
     two TFBS datasets and returns a null table Model row for
     insertion.
@@ -296,6 +309,8 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
         -- use_tsses: defines whether the algorithm should search for
         colocation in promoters. Use False for null distributions.
         (default: True)"""
+
+    max_distances = sorted(max_distances, reverse=True)
 
     print(AnalysisResults.objects.count())
 
@@ -332,7 +347,7 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
     # Start consumers
     num_consumers = min(MAX_CPU, int(multiprocessing.cpu_count()))
     print('Creating %d consumers' % num_consumers)
-    consumers = [Consumer(tasks, results, session_id, max_distance, target_directory1, target_directory2) for i in range(num_consumers)]
+    consumers = [Consumer(tasks, results, session_id, max_distances, target_directory1, target_directory2) for i in range(num_consumers)]
     # consumers = [Consumer(tasks, results)]
 
     for w in consumers:
@@ -355,10 +370,11 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
     # Start printing results
     while not tasks.empty():
         try:
-            result = results.get(timeout=1)
-            save_to_db(session_id, result)
+            ress = results.get(timeout=1)
+            for res in ress:
+                save_to_db(session_id, res)
             count += 1
-            print('\t\t\tA Count: ', count, ' - Result:', result)
+            print('\t\t\tA Count: ', count, ' - Result:', ress)
         except Empty:
             # print ('##timeout##')
             pass
@@ -367,8 +383,9 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
 
     # Start printing results
     while not results.empty():
-        result = results.get()
-        save_to_db(session_id, result)
+        ress = results.get()
+        for res in ress:
+            save_to_db(session_id, res)
         count += 1
         print('\t\t\tB Count: ', count, ' - Result:', result)
 
@@ -378,6 +395,31 @@ def save_to_db(session_id, value_dict):
     new_result.session_id = session_id
     new_result.tf1 = value_dict['tf1']
     new_result.tf2 = value_dict['tf2']
+    new_result.max_distance = value_dict['max_distance']
+
+    new_result.average = value_dict.get('average')
+    new_result.median = value_dict.get('median')
+    new_result.mad = value_dict.get('mad')
+
+    new_result.tail_00 = value_dict.get('tail_00')
+    new_result.tail_01 = value_dict.get('tail_01')
+    new_result.tail_02 = value_dict.get('tail_02')
+    new_result.tail_03 = value_dict.get('tail_03')
+    new_result.tail_04 = value_dict.get('tail_04')
+    new_result.tail_05 = value_dict.get('tail_05')
+    new_result.tail_06 = value_dict.get('tail_06')
+    new_result.tail_07 = value_dict.get('tail_07')
+    new_result.tail_08 = value_dict.get('tail_08')
+    new_result.tail_09 = value_dict.get('tail_09')
+    new_result.tail_10 = value_dict.get('tail_10')
+
+    new_result.tail_1000 = value_dict.get('tail_1000')
+    new_result.save()
+
+    new_result = AnalysisResults()
+    new_result.session_id = session_id
+    new_result.tf1 = value_dict['tf2']
+    new_result.tf2 = value_dict['tf1']
     new_result.max_distance = value_dict['max_distance']
 
     new_result.average = value_dict.get('average')
