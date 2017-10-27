@@ -189,6 +189,16 @@ def back_to_session(request):
                   "Please come back in a few minutes."
     elif session.first().upload_status == 'FAIL':
         context['message'] = "Something went wrong while processing you file :-("
+    else:
+        form = EncodeParameterForm("", "")
+        list_tf1 = list(AnalysisResults.objects.filter(
+            session_id=session_id).values_list('tf1', flat=True).distinct())
+        list_tf2 = list(AnalysisResults.objects.filter(
+            session_id=session_id).values_list('tf2', flat=True).distinct())
+        form.__set_tf1__(list_tf1)
+        form.__set_tf2__(list_tf2)
+        context['form'] = form
+        context['http_method'] = 'get'
 
     return render(request, 'tester/user_session.html', context)
 

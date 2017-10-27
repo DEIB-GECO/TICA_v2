@@ -4,13 +4,22 @@
 
 
 {% block content_header %}
-<h1>TICA v2 WELLCOME BACK</h1>
+<h1>TICA v2 WELCOME BACK</h1>
 {% endblock %}
 
 
 {% block content_body %}
 
 <p>{{message}}</p>
+{% if form %}
+<form action="{% url 'tester:test_results' %}" method="{{ http_method }}" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Submit</button>
+    {% endbuttons %}
+{% endif %}
+</form>
 
 
 {% endblock %}

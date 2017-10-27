@@ -36,6 +36,12 @@ class EncodeParameterForm(forms.ModelForm):
         self.fields['tf2'].choices = [(x, x) for x in get_tf_list(cell)]
         self.fields['which_tests'].empty_label = None
 
+    def __set_tf1__(self, tf1_list):
+        self.fields['tf1'].choices = [(x,x) for x in tf1_list]
+
+    def __set_tf2__(self, tf2_list):
+        self.fields['tf2'].choices = [(x,x) for x in tf2_list]
+
 class MyDataEncodeParameterForm(forms.ModelForm):
     class Meta:
         model = MyDataEncodeFormModel
