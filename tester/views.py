@@ -1,14 +1,16 @@
-from django.shortcuts import render
-import tester.utils as utils
-from .forms import *
-import django_tables2 as tables
-from django_tables2 import RequestConfig
+import json
 import os
 import time
-import json
-from django.db import connections
 
-from tester.pipeline_controller import *
+import django_tables2 as tables
+from django.db import connections
+from django.shortcuts import render
+from django_tables2 import RequestConfig
+
+import tester.utils as utils
+from tester.pipeline_controller import pipeline_controller
+from .forms import *
+
 
 # Create your views here.
 def create_session_id(request):
@@ -46,10 +48,8 @@ def param_input(request):
     return render(request, "tester/param_input.html", context=context)
 
 
-
 def child(session_id):
     pipeline_controller(session_id)
-
 
 
 def test_results(request):

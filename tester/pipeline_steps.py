@@ -159,16 +159,13 @@ def tfbs_filter(tfbs_data, tf_list, window_size=1000, min_acc_value=3):
     # for df in datasets[1:]:
     #     tfbs_data = tfbs_data.union(df)
 
-    tfbs_data.materialize('input_banane-1/')
     npeaks = tfbs_data.reg_project(
         new_field_dict={
             'start': tfbs_data.start + tfbs_data.peak,
             'stop': tfbs_data.start + tfbs_data.peak + 1}
     )
-    npeaks.materialize('npeaks_banane0/')
     # NOTE: groupBy must be given in list format
     covered = npeaks.cover(1, 'ANY', groupBy=['experiment_target'])
-    covered.materialize('cover_banane1/')
     signals = covered  # Is it the same as copying?
     # Enlarge by moving window
     windows = covered.reg_project(new_field_dict={'start': covered.start

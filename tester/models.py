@@ -23,6 +23,7 @@ P_VALUES = ((5, '0.05'),
             (20, '0.2')
             )
 
+
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=80)
 
@@ -249,10 +250,9 @@ class EncodeFormModel(models.Model):
     max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1)
     num_min = models.IntegerField()
     num_min_w_tsses = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
-    which_tests = models.CharField(max_length=20,choices=TESTS, blank=False, null=False, default=1)
+    which_tests = models.CharField(max_length=20, choices=TESTS, blank=False, null=False, default=1)
     min_test_num = models.IntegerField()
     pvalue = models.IntegerField(choices=P_VALUES, default=1)
-
 
 
 class MyDataEncodeFormModel(models.Model):
@@ -261,6 +261,7 @@ class MyDataEncodeFormModel(models.Model):
     session_id = models.CharField(max_length=100)
     max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1)
     mydata = models.FileField(upload_to="uploaded/")
+
 
 class AnalysisResults(models.Model):
     session_id = models.CharField(max_length=100)
