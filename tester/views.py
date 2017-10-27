@@ -65,7 +65,6 @@ def test_results_mydata_encode(request):
         cell = request.POST['cell']
         method = request.POST['method']
         session_id = create_session_id(request)
-        max_dist = request.POST['max_dist']
 
         form = MyDataEncodeParameterForm(request.POST, request.FILES)
         form.set_initial_values(cell,
@@ -75,8 +74,7 @@ def test_results_mydata_encode(request):
             newdoc = MyDataEncodeFormModel(cell=cell,
                                            method=method,
                                            session_id=session_id,
-                                           mydata=request.FILES['mydata'],
-                                           max_dist=max_dist)
+                                           mydata=request.FILES['mydata'])
             newdoc.save()
 
             connections.close_all()
@@ -89,7 +87,7 @@ def test_results_mydata_encode(request):
         else:
             print("\n\n\n\n NOT VALID:", form.errors, "\n\n\n\n")
 
-    return render(request, 'tester/job_status.html')
+    return render(request, 'tester/upload_response.html')
 
 
 def test_results_encode(request):
@@ -169,3 +167,7 @@ def test_results_encode(request):
     }
 
     return render(request, 'tester/test_results.html', context)
+
+
+def back_to_session(request):
+    session_id = request.GET['session_id']

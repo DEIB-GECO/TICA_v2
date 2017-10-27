@@ -23,6 +23,12 @@ P_VALUES = ((5, '0.05'),
             (20, '0.2')
             )
 
+UPLOAD_STATUS = (('PENDING', 'PENDING'),
+                 ('SUCCESS', 'SUCCESS'),
+                 ('FAIL', 'FAIL')
+
+                 )
+
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=80)
@@ -259,15 +265,15 @@ class MyDataEncodeFormModel(models.Model):
     cell = models.CharField(max_length=20)
     method = models.CharField(max_length=20)
     session_id = models.CharField(max_length=100)
-    max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1)
     mydata = models.FileField(upload_to="uploaded/")
+    upload_status = models.CharField(choices=UPLOAD_STATUS, max_length=20, default="PENDING")
 
 
 class AnalysisResults(models.Model):
-    session_id = models.CharField(max_length=100)
+    session_id = models.CharField(max_length=100,null=True)
     tf1 = models.CharField(max_length=50)
     tf2 = models.CharField(max_length=50)
-    max_distance = models.IntegerField()
+    max_distance = models.IntegerField(null=True)
     average = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     mad = models.FloatField(blank=True, null=True)

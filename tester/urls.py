@@ -11,4 +11,6 @@ urlpatterns = [
     # ex: /home/test
     url(r'^test_results/$', views.test_results, name='test_results'),
 
+    url(r'^back_to_session/$', views.back_to_session, name='back_to_session'),
+
 ]

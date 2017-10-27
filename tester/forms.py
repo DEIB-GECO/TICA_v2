@@ -45,11 +45,18 @@ class MyDataEncodeParameterForm(forms.ModelForm):
             'cell': forms.HiddenInput(),
             'method': forms.HiddenInput(),
             'session_id' : forms.HiddenInput(),
+            'upload_status' : forms.HiddenInput(),
+
         }
 
         labels = {
             'mydata' : 'Upload your dataset here',
-            'max_dist' : 'Maximum distance in couples [bp]'
+            'which_tests' : 'Which tests do you want to use?',
+            'max_dist' : 'Maximum distance in couples [bp]',
+            'num_min' : 'How many mindistance couples are needed?',
+            'num_min_w_tsses' : 'Fraction of couples colocating in a promoter?',
+            'min_test_num' : 'How many tests should be passed?',
+            'pvalue' : 'Individual test pvalue',
         }
 
 

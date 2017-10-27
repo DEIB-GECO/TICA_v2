@@ -10,7 +10,6 @@ def pipeline_controller(session_id, method='', cell=''):
     try:
         res = MyDataEncodeFormModel.objects.filter(session_id=session_id).first()
 
-        max_distance = res.max_dist
 
         input_zip = res.mydata.path
         tss_file = 'media/active_tsses.bed'
@@ -47,10 +46,15 @@ def pipeline_controller(session_id, method='', cell=''):
         your_maps = tfbs2tss_mapper(materialized_files, tfs, tss_file,
                                     target_folder=tfbs_to_tss_maps_folder)
 
-        compute_min_distance(session_id, tfbs_to_tss_maps_folder, tfbs_to_tss_maps_folder, max_distance)
+        compute_min_distance(session_id, tfbs_to_tss_maps_folder, tfbs_to_tss_maps_folder)
+
+        res.upload_status = "SUCCESS"
+        res.save()
 
         print("\n\n\n\n\n\nchild\n\n\n\n\n", res.session_id, type(res), session_id, "\n\n\n\n\n\nchild\n\n\n\n\n")
     except Exception as e:
+        res.upload_status = "FAIL"
+        res.save()
         logging.exception("Something awful happened!")
     finally:
         print("finally")
