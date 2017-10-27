@@ -277,10 +277,10 @@ class Task(object):
             count_all = len(distances)
             count_tss = len([dist for dist in distances if dist[1]])
             distances_first_values = [dist[0] for dist in distances]
+            res['count_all'] = count_all
+            res['count_tss'] = count_tss
 
             if count_all > 0:
-                res['count_all'] = count_all
-                res['count_tss'] = count_tss
                 res['average'] = statistics.mean(distances_first_values)
                 res['median'] = statistics.median(distances_first_values)
                 res['mad'] = statistics.median([abs(x - res['median']) for x in distances_first_values])
@@ -372,7 +372,7 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
         try:
             ress = results.get(timeout=1)
             for res in ress:
-                save_to_db(session_id, res)
+                save_to_db(session_id, res, is_same)
             count += 1
             print('\t\t\tA Count: ', count, ' - Result:', ress)
         except Empty:
@@ -385,42 +385,20 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
     while not results.empty():
         ress = results.get()
         for res in ress:
-            save_to_db(session_id, res)
+            save_to_db(session_id, res, is_same)
         count += 1
-        print('\t\t\tB Count: ', count, ' - Result:', result)
+        print('\t\t\tB Count: ', count, ' - Result:', ress)
 
 
-def save_to_db(session_id, value_dict):
+def save_to_db(session_id, value_dict, is_same):
     new_result = AnalysisResults()
     new_result.session_id = session_id
     new_result.tf1 = value_dict['tf1']
     new_result.tf2 = value_dict['tf2']
     new_result.max_distance = value_dict['max_distance']
 
-    new_result.average = value_dict.get('average')
-    new_result.median = value_dict.get('median')
-    new_result.mad = value_dict.get('mad')
-
-    new_result.tail_00 = value_dict.get('tail_00')
-    new_result.tail_01 = value_dict.get('tail_01')
-    new_result.tail_02 = value_dict.get('tail_02')
-    new_result.tail_03 = value_dict.get('tail_03')
-    new_result.tail_04 = value_dict.get('tail_04')
-    new_result.tail_05 = value_dict.get('tail_05')
-    new_result.tail_06 = value_dict.get('tail_06')
-    new_result.tail_07 = value_dict.get('tail_07')
-    new_result.tail_08 = value_dict.get('tail_08')
-    new_result.tail_09 = value_dict.get('tail_09')
-    new_result.tail_10 = value_dict.get('tail_10')
-
-    new_result.tail_1000 = value_dict.get('tail_1000')
-    new_result.save()
-
-    new_result = AnalysisResults()
-    new_result.session_id = session_id
-    new_result.tf1 = value_dict['tf2']
-    new_result.tf2 = value_dict['tf1']
-    new_result.max_distance = value_dict['max_distance']
+    new_result.cumulative_count_all = value_dict.get('count_all')
+    new_result.cumulative_count_tss = value_dict.get('count_tss')
 
     new_result.average = value_dict.get('average')
     new_result.median = value_dict.get('median')
@@ -440,3 +418,32 @@ def save_to_db(session_id, value_dict):
 
     new_result.tail_1000 = value_dict.get('tail_1000')
     new_result.save()
+
+    if is_same:
+        new_result = AnalysisResults()
+        new_result.session_id = session_id
+        new_result.tf1 = value_dict['tf2']
+        new_result.tf2 = value_dict['tf1']
+        new_result.max_distance = value_dict['max_distance']
+
+        new_result.cumulative_count_all = value_dict.get('count_all')
+        new_result.cumulative_count_tss = value_dict.get('count_tss')
+
+        new_result.average = value_dict.get('average')
+        new_result.median = value_dict.get('median')
+        new_result.mad = value_dict.get('mad')
+
+        new_result.tail_00 = value_dict.get('tail_00')
+        new_result.tail_01 = value_dict.get('tail_01')
+        new_result.tail_02 = value_dict.get('tail_02')
+        new_result.tail_03 = value_dict.get('tail_03')
+        new_result.tail_04 = value_dict.get('tail_04')
+        new_result.tail_05 = value_dict.get('tail_05')
+        new_result.tail_06 = value_dict.get('tail_06')
+        new_result.tail_07 = value_dict.get('tail_07')
+        new_result.tail_08 = value_dict.get('tail_08')
+        new_result.tail_09 = value_dict.get('tail_09')
+        new_result.tail_10 = value_dict.get('tail_10')
+
+        new_result.tail_1000 = value_dict.get('tail_1000')
+        new_result.save()

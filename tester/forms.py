@@ -8,6 +8,7 @@ class EncodeParameterForm(forms.ModelForm):
         model = EncodeFormModel
         fields = '__all__'
         widgets ={
+            'session_id': forms.HiddenInput(),
             'cell': forms.HiddenInput(),
             'method': forms.HiddenInput(),
             'which_tests' : forms.CheckboxSelectMultiple(),
@@ -41,6 +42,9 @@ class EncodeParameterForm(forms.ModelForm):
 
     def __set_tf2__(self, tf2_list):
         self.fields['tf2'].choices = [(x,x) for x in tf2_list]
+
+    def __set_session_id__(self, session_id):
+        self.fields['session_id'].initial = session_id
 
 class MyDataEncodeParameterForm(forms.ModelForm):
     class Meta:

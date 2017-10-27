@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 
 staticCache = dict()
 
-#path to encode preprocessed data
+# path to encode preprocessed data
 encode_directory = os.path.join(
-    os.path.dirname( os.path.abspath(os.path.dirname(__file__)) ),
+    os.path.dirname(os.path.abspath(os.path.dirname(__file__))),
     "media/encode")
+
 
 def get_cell_lines():
     if not 'get_cell_lines' in staticCache:
@@ -71,13 +72,18 @@ def get_tf_list(cell='hepg2'):
     return staticCache['get_tf_list-' + cell]
 
 
-
-def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_value, min_num_true_test, test_list):
+def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_value, min_num_true_test, test_list, method='encode',session_id=None):
     temp_null = calculate_null(cell)[maxd]
     result = []
-    null_lines = CellLineNull.objects.filter(cell_line=cell).filter(
-        (Q(tf1__in=tf1_list) & Q(tf2__in=tf2_list)) | (Q(tf1__in=tf2_list) & Q(tf2__in=tf1_list))).filter(
-        max_distance=maxd)
+    if method == 'encode':
+        null_lines = CellLineNull.objects.filter(cell_line=cell)
+    else:
+        null_lines = AnalysisResults.objects.filter(session_id=session_id)
+
+
+    null_lines = null_lines.filter(tf1__in=tf1_list).filter(tf2__in=tf2_list).filter(max_distance=maxd)
+
+    print(null_lines.query)
 
     for line_null in null_lines:
 
@@ -100,9 +106,9 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
             null_value = temp_null[test_name]
             if line_null_dict[i] is not None and line_null_dict[i] <= null_value:
                 passed.append(i)
-                scores[i+"_passed"] = "Passed"
+                scores[i + "_passed"] = "Passed"
             else:
-                scores[i+"_passed"] = "Failed"
+                scores[i + "_passed"] = "Failed"
             scores[i] = line_null_dict[i]
 
         scores['num_passed'] = len(passed)

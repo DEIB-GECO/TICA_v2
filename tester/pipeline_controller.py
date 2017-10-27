@@ -6,15 +6,14 @@ from tester.pipeline_steps import *
 import logging
 
 
-def pipeline_controller(session_id, method='', cell=''):
+def pipeline_controller(session_id, method='mydata_mydata', cell=''):
     try:
         res = MyDataEncodeFormModel.objects.filter(session_id=session_id).first()
 
-
         input_zip = res.mydata.path
+        encode_folder = 'media/encode/'
         tss_file = 'media/active_tsses.bed'
         temp_folder = 'media/temp/%s/' % session_id
-
 
         # connections.close_all()
 
@@ -46,7 +45,10 @@ def pipeline_controller(session_id, method='', cell=''):
         your_maps = tfbs2tss_mapper(materialized_files, tfs, tss_file,
                                     target_folder=tfbs_to_tss_maps_folder)
 
-        compute_min_distance(session_id, tfbs_to_tss_maps_folder, tfbs_to_tss_maps_folder)
+        if method == 'mydata_mydata':
+            compute_min_distance(session_id, tfbs_to_tss_maps_folder, tfbs_to_tss_maps_folder)
+        else:
+            compute_min_distance(session_id, tfbs_to_tss_maps_folder, encode_folder)
 
         res.upload_status = "SUCCESS"
         res.save()

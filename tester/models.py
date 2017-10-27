@@ -259,6 +259,7 @@ class EncodeFormModel(models.Model):
     which_tests = models.CharField(max_length=20, choices=TESTS, blank=False, null=False, default=1)
     min_test_num = models.IntegerField()
     pvalue = models.IntegerField(choices=P_VALUES, default=1)
+    session_id = models.CharField(max_length=100)
 
 
 class MyDataEncodeFormModel(models.Model):
@@ -273,7 +274,9 @@ class AnalysisResults(models.Model):
     session_id = models.CharField(max_length=100,null=True)
     tf1 = models.CharField(max_length=50)
     tf2 = models.CharField(max_length=50)
-    max_distance = models.IntegerField(null=True)
+    max_distance = models.IntegerField()
+    cumulative_count_all = models.IntegerField(blank=True, null=True)
+    cumulative_count_tss = models.IntegerField(blank=True, null=True)
     average = models.FloatField(blank=True, null=True)
     median = models.FloatField(blank=True, null=True)
     mad = models.FloatField(blank=True, null=True)

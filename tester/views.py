@@ -35,11 +35,10 @@ def param_input(request):
     form = None
     if method == 'encode':
         form = EncodeParameterForm(cell, method)
-    elif method == 'mydata_encode':
+    elif method == 'mydata_encode' or method == 'mydata_mydata':
         form = MyDataEncodeParameterForm()
         form.set_initial_values(cell, method, create_session_id(request))
-    elif method == 'mydata_mydata':
-        pass
+
 
     context = {
         'form': form,
@@ -48,15 +47,15 @@ def param_input(request):
     return render(request, "tester/param_input.html", context=context)
 
 
-def child(session_id):
-    pipeline_controller(session_id)
+def child(session_id, method, cell):
+    pipeline_controller(session_id, method, cell)
 
 
 def test_results(request):
     method = request.GET['method'] if request.method == 'GET' else request.POST['method']
     if method == 'encode':
         return test_results_encode(request)
-    elif method == 'mydata_encode':
+    elif method == 'mydata_encode' or method == 'mydata_mydata':
         return test_results_mydata_encode(request)
 
 
@@ -81,7 +80,7 @@ def test_results_mydata_encode(request):
 
             pid = os.fork()
             if pid == 0:
-                child(session_id)
+                child(session_id, method, cell)
                 return
 
         else:
@@ -95,6 +94,11 @@ def test_results_mydata_encode(request):
 
 
 def test_results_encode(request):
+    method = request.GET['method']
+    session_id = request.GET.get('session_id')
+    print(method)
+    print(session_id)
+
     cell = request.GET['cell']
     tf1 = request.GET.getlist('tf1')
     tf2 = request.GET.getlist('tf2')
@@ -127,6 +131,7 @@ def test_results_encode(request):
             exclude = not_shown
             attrs = {'class': 'paleblue'}
 
+
     analysis_results = utils.check_tf2(cell,
                                        tf1,
                                        tf2,
@@ -136,7 +141,9 @@ def test_results_encode(request):
                                        num_min,
                                        pvalue,
                                        min_test_num,
-                                       wanted_tests)
+                                       wanted_tests,method,session_id)
+
+
 
     table = NameTable(analysis_results)
 
@@ -190,13 +197,17 @@ def back_to_session(request):
     elif session.first().upload_status == 'FAIL':
         context['message'] = "Something went wrong while processing you file :-("
     else:
-        form = EncodeParameterForm("", "")
+        session = session.first()
+        cell  = session.cell
+        method  = session.method
+        form = EncodeParameterForm(cell, method)
         list_tf1 = list(AnalysisResults.objects.filter(
             session_id=session_id).values_list('tf1', flat=True).distinct())
         list_tf2 = list(AnalysisResults.objects.filter(
             session_id=session_id).values_list('tf2', flat=True).distinct())
         form.__set_tf1__(list_tf1)
         form.__set_tf2__(list_tf2)
+        form.__set_session_id__(session_id)
         context['form'] = form
         context['http_method'] = 'get'
 
