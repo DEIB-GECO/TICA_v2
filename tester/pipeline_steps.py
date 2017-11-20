@@ -187,6 +187,15 @@ def tfbs_filter(tfbs_data, tf_list, window_size=1000, min_acc_value=3):
 
     return filtered_signals
 
+# from tester.pipeline_controller import tfbs2tss_mapper
+#
+# tfbs2tss_mapper(
+#     ['media/temp/127_0_0_1_1510848168_4206731//tfbs//exp/S_00000.gdm', 'media/temp/127_0_0_1_1510848168_4206731//tfbs//exp/S_00001.gdm', 'media/temp/127_0_0_1_1510848168_4206731//tfbs//exp/S_00002.gdm', 'media/temp/127_0_0_1_1510848168_4206731//tfbs//exp/S_00003.gdm', 'media/temp/127_0_0_1_1510848168_4206731//tfbs//exp/S_00004.gdm']
+#     , ['JUN', 'ATF3', 'MYC', 'MAX', 'ARID3A']
+#     , 'media/active_tsses.bed'
+#     , 'media/temp/127_0_0_1_1510848168_4206731//tfbs_to_tss_maps2/'
+# )
+
 
 def tfbs2tss_mapper(tfbs_file_list, target_list,
                     tss_file_path, target_folder='path/to/default'):
@@ -206,10 +215,11 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
     tsses_raw = pd.read_csv(tss_file_path, sep='\t', header=None).values
     tsses = dict(
         [
-            (c, [item for item in tsses_raw if item[1] == c])
+            (c, [item for item in tsses_raw if item[0] == c])
             for c in CHRS
         ]
     )
+    tsses_raw = None
 
     to_execute = zip(target_list, tfbs_file_list)
     for item in to_execute:
@@ -229,17 +239,17 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
         for c in CHRS:
             f_tfbses = tfbses[c]
             f_tss = it.IntervalTree.from_tuples(
-                [(item[2] - 2000, item[3] + 201, item[0])
-                 if item[6] == '+'
-                 else (item[2] - 200, item[3] + 2001, item[0])
+                [(item[1] - 2000, item[2] + 201, item[4])
+                 if item[3] == '+'
+                 else (item[1] - 200, item[2] + 2001, item[4])
                  for item in tsses[c]]
             )
             c_map_ = [(tfbs[1][0], tfbs[1][1], f_tss[tfbs[1][1]])
                       for tfbs in f_tfbses]
             associated_tss += c_map_
-        print(associated_tss)
+        # print(associated_tss)
         os.makedirs(target_folder, exist_ok=True)
-        with open('%s/%s_TFBS_w_MAPS.tsv' %
+        with open('%s/%s' %
                           (target_folder, item[0]), 'w') \
                 as associated_outfile:
 
@@ -250,7 +260,7 @@ def tfbs2tss_mapper(tfbs_file_list, target_list,
                          [data[2] for data in list(item[2])])])
                  if list(item[2]) else '')
                  for item in associated_tss])
-        print('Map complete.')
+        print('Map complete.', item[0])
     return True
 
 

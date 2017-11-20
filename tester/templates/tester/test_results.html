@@ -46,17 +46,26 @@
     return document.getElementById(elementId).getContext('2d');
   }
 
+{#    var colorTestColors = [ "rgba(220,220,220,0.9)", "rgba(151,187,205,0.9)"];#}
+
+
   // completely arbitrary data
   var sampleData = {{heatmap|safe}};
 
-  var sampleChart = new Chart(ctx('sampleChart')).HeatMap(sampleData, {responsive: true});
+  var sampleChart = new Chart(ctx('sampleChart')).HeatMap(sampleData, {
+      responsive: true,
+      rounded: false,
+{#      colors: colorTestColors,#}
+{#        colorInterpolation: 'gradient',#}
+  });
 
-  var colorTestColors = ['red','green','blue'];
 
   var tooltipOptionsChart = new Chart(ctx('tooltipOptionsChart'))
     .HeatMap(sampleData, {
         responsive: true,
-        tooltipTemplate: "xLabel: <%= xLabel %> | yLabel: <%= yLabel %> | value: <%= value %>"
+        tooltipTemplate: "xLabel: <%= xLabel %> | yLabel: <%= yLabel %> | value: <%= value %>",
+        colors: colorTestColors,
+        colorInterpolation: 'gradient',
       });
 
   var gradientChart = new Chart(ctx('gradientChart'))

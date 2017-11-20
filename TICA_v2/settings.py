@@ -83,7 +83,7 @@ DATABASES = {
         'USER': 'tica',
         'PASSWORD': 'tica55555',
         'HOST': 'localhost', #ssh -L 5433:localhost:5432 perna@genomic.elet.polimi.it
-        'PORT': '5433'
+        'PORT': '5432'
     }
 }
 

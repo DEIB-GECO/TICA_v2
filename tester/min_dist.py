@@ -181,7 +181,7 @@ def read(tf, directory):
         # TODO change location
         tss_val = s[2] if len(s) > 2 else None
         tss_val = tss_val if tss_val != '-1' else None
-        tss = set([int(t) for t in tss_val.split(",")]) if tss_val else None
+        tss = set([t for t in tss_val.split(",")]) if tss_val else None
         c = s[0].lower()
         temp_tf[c].append(Region(int(s[1]), tss))
     temp_tf2 = dict()
@@ -391,6 +391,22 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
 
 
 def save_to_db(session_id, value_dict, is_same):
+    if session_id.startswith('ENCODE_'):
+        session_id = session_id.replace('ENCODE_', '')
+        f = get_encode_results
+    else:
+        f = get_analysis_results
+
+    new_result = f(session_id, value_dict)
+    new_result.save()
+    if is_same:
+        new_result = f(session_id, value_dict)
+        new_result.tf1 = value_dict['tf2']
+        new_result.tf2 = value_dict['tf1']
+        new_result.save()
+
+
+def get_analysis_results(session_id, value_dict):
     new_result = AnalysisResults()
     new_result.session_id = session_id
     new_result.tf1 = value_dict['tf1']
@@ -417,33 +433,34 @@ def save_to_db(session_id, value_dict, is_same):
     new_result.tail_10 = value_dict.get('tail_10')
 
     new_result.tail_1000 = value_dict.get('tail_1000')
-    new_result.save()
+    return new_result
 
-    if is_same:
-        new_result = AnalysisResults()
-        new_result.session_id = session_id
-        new_result.tf1 = value_dict['tf2']
-        new_result.tf2 = value_dict['tf1']
-        new_result.max_distance = value_dict['max_distance']
 
-        new_result.cumulative_count_all = value_dict.get('count_all')
-        new_result.cumulative_count_tss = value_dict.get('count_tss')
+def get_encode_results(cell_line, value_dict):
+    new_result = CellLineNull()
+    new_result.cell_line = cell_line
+    new_result.tf1 = value_dict['tf1']
+    new_result.tf2 = value_dict['tf2']
+    new_result.max_distance = value_dict['max_distance']
 
-        new_result.average = value_dict.get('average')
-        new_result.median = value_dict.get('median')
-        new_result.mad = value_dict.get('mad')
+    new_result.cumulative_count_all = value_dict.get('count_all')
+    new_result.cumulative_count_tss = value_dict.get('count_tss')
 
-        new_result.tail_00 = value_dict.get('tail_00')
-        new_result.tail_01 = value_dict.get('tail_01')
-        new_result.tail_02 = value_dict.get('tail_02')
-        new_result.tail_03 = value_dict.get('tail_03')
-        new_result.tail_04 = value_dict.get('tail_04')
-        new_result.tail_05 = value_dict.get('tail_05')
-        new_result.tail_06 = value_dict.get('tail_06')
-        new_result.tail_07 = value_dict.get('tail_07')
-        new_result.tail_08 = value_dict.get('tail_08')
-        new_result.tail_09 = value_dict.get('tail_09')
-        new_result.tail_10 = value_dict.get('tail_10')
+    new_result.average = value_dict.get('average')
+    new_result.median = value_dict.get('median')
+    new_result.mad = value_dict.get('mad')
 
-        new_result.tail_1000 = value_dict.get('tail_1000')
-        new_result.save()
+    new_result.tail_00 = value_dict.get('tail_00')
+    new_result.tail_01 = value_dict.get('tail_01')
+    new_result.tail_02 = value_dict.get('tail_02')
+    new_result.tail_03 = value_dict.get('tail_03')
+    new_result.tail_04 = value_dict.get('tail_04')
+    new_result.tail_05 = value_dict.get('tail_05')
+    new_result.tail_06 = value_dict.get('tail_06')
+    new_result.tail_07 = value_dict.get('tail_07')
+    new_result.tail_08 = value_dict.get('tail_08')
+    new_result.tail_09 = value_dict.get('tail_09')
+    new_result.tail_10 = value_dict.get('tail_10')
+
+    new_result.tail_1000 = value_dict.get('tail_1000')
+    return new_result

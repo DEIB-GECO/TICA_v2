@@ -201,10 +201,10 @@ def back_to_session(request):
         cell  = session.cell
         method  = session.method
         form = EncodeParameterForm(cell, method)
-        list_tf1 = list(AnalysisResults.objects.filter(
-            session_id=session_id).values_list('tf1', flat=True).distinct())
-        list_tf2 = list(AnalysisResults.objects.filter(
-            session_id=session_id).values_list('tf2', flat=True).distinct())
+        list_tf1 = sorted(list(AnalysisResults.objects.filter(
+            session_id=session_id).values_list('tf1', flat=True).distinct()))
+        list_tf2 = sorted(list(AnalysisResults.objects.filter(
+            session_id=session_id).values_list('tf2', flat=True).distinct()))
         form.__set_tf1__(list_tf1)
         form.__set_tf2__(list_tf2)
         form.__set_session_id__(session_id)
