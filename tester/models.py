@@ -95,25 +95,25 @@ class AuthUserUserPermissions(models.Model):
         db_table = 'auth_user_user_permissions'
         unique_together = (('user', 'permission'),)
 
-
-class CellLineCouple(models.Model):
-    cell_line = models.ForeignKey('CellLineTfs', models.DO_NOTHING, db_column='cell_line', primary_key=True)
-    tf1 = models.CharField(max_length=20)
-    tf2 = models.CharField(max_length=20)
-    distance = models.IntegerField()
-    count_all = models.IntegerField()
-    count_tss = models.IntegerField()
-    cumulative_count_all = models.IntegerField()
-    cumulative_count_tss = models.IntegerField()
-
-    class Meta:
-        managed = False
-        db_table = 'cell_line_couple'
-        unique_together = (('cell_line', 'tf1', 'tf2', 'distance'),)
+#
+# class CellLineCouple(models.Model):
+#     cell_line = models.CharField(max_length=20)
+#     tf1 = models.CharField(max_length=20)
+#     tf2 = models.CharField(max_length=20)
+#     distance = models.IntegerField()
+#     count_all = models.IntegerField()
+#     count_tss = models.IntegerField()
+#     cumulative_count_all = models.IntegerField()
+#     cumulative_count_tss = models.IntegerField()
+#
+#     class Meta:
+#         managed = False
+#         db_table = 'cell_line_couple'
+#         unique_together = (('cell_line', 'tf1', 'tf2', 'distance'),)
 
 
 class CellLineNull(models.Model):
-    cell_line = models.ForeignKey('CellLineTfs', models.DO_NOTHING, db_column='cell_line', primary_key=True)
+    cell_line = models.CharField(max_length=20)
     tf1 = models.CharField(max_length=20)
     tf2 = models.CharField(max_length=20)
     max_distance = models.IntegerField()
@@ -142,9 +142,12 @@ class CellLineNull(models.Model):
 
 
 class CellLineTfs(models.Model):
-    cell_line = models.CharField(primary_key=True, max_length=20)
+    cell_line = models.CharField(max_length=20)
     tf = models.CharField(max_length=20)
     use_in_null = models.BooleanField()
+    
+    def __str__(self):
+        return '%s_%s_%s' % (self.cell_line, self.tf, self.use_in_null)
 
     class Meta:
         managed = False
@@ -248,16 +251,19 @@ class Hepg2Temp(models.Model):
         db_table = 'hepg2_temp'
 
 
+# To be verified
 class EncodeFormModel(models.Model):
     cell = models.CharField(max_length=20)
     method = models.CharField(max_length=20)
     tf1 = models.CharField(choices=[("", "")], max_length=20)
     tf2 = models.CharField(choices=[("", "")], max_length=20)
-    max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1)
-    num_min = models.IntegerField()
-    num_min_w_tsses = models.DecimalField(max_digits=5, decimal_places=2, blank=True)
+    max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1,
+                                   help_text='Maximum distance allowed for mindist couples, measured in bps.')
+    num_min = models.IntegerField(help_text='Minimum number of mindist couples required to accept a candidate.')
+    num_min_w_tsses = models.DecimalField(max_digits=5, decimal_places=2, blank=True,
+                                          help_text='Minimum fraction of mindist couples which must colocate in a promoter.')
     which_tests = models.CharField(max_length=20, choices=TESTS, blank=False, null=False, default=1)
-    min_test_num = models.IntegerField()
+    min_test_num = models.IntegerField(help_text='Minimum number of rejected null hypothesis (from the above) required to accept a candidate.')
     pvalue = models.IntegerField(choices=P_VALUES, default=1)
     session_id = models.CharField(max_length=100)
 
