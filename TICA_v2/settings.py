@@ -81,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'tica',
         'USER': 'tica',
-        'PASSWORD': 'ticav2',  # Updated 20/11/2017, supposed to be temp
+        'PASSWORD': 'tica55555',  # Updated 20/11/2017, supposed to be temp
         'HOST': 'localhost', #ssh -L 5432:localhost:5432 tica@geco.deib.polimi.it
         'PORT': '5432'
     }
