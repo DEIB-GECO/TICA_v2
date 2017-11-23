@@ -7,14 +7,14 @@ class EncodeParameterForm(forms.ModelForm):
     class Meta:
         model = EncodeFormModel
         fields = '__all__'
-        widgets ={
+        widgets        ={
             'session_id': forms.HiddenInput(),
             'cell': forms.HiddenInput(),
             'method': forms.HiddenInput(),
-            'which_tests' : forms.CheckboxSelectMultiple(),
-            'tf1' : forms.SelectMultiple(),
+            'which_tests': forms.CheckboxSelectMultiple(),
+            'tf1': forms.SelectMultiple(),
             'tf2': forms.SelectMultiple(),
-
+    
         }
 
         labels = {
@@ -78,7 +78,8 @@ class MyDataEncodeParameterForm(forms.ModelForm):
 
 
 class CellMethodForm(forms.Form):
-    cell = forms.ChoiceField(choices=[("hepg2", "HepG2"), ("k562", "K562")])
+    cell = forms.ChoiceField(choices=[("hepg2", "HepG2"), ("k562", "K562"),
+                                      ("gm12878", "GM12878")])
     method = forms.ChoiceField(choices=[("encode", "Encode"),
                                         ("mydata_encode", "My data vs. Encode"),
                                         ("mydata_mydata", "My data vs. my data"),

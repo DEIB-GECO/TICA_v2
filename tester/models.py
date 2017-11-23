@@ -135,10 +135,10 @@ class CellLineNull(models.Model):
     tail_10 = models.FloatField(blank=True, null=True)
     tail_1000 = models.FloatField(blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'cell_line_null'
-        unique_together = (('cell_line', 'tf1', 'tf2', 'max_distance'),)
+    # class Meta:
+    #     managed = False
+    #     db_table = 'cell_line_null'
+    #     unique_together = (('cell_line', 'tf1', 'tf2', 'max_distance'),)
 
 
 class CellLineTfs(models.Model):
@@ -149,10 +149,10 @@ class CellLineTfs(models.Model):
     def __str__(self):
         return '%s_%s_%s' % (self.cell_line, self.tf, self.use_in_null)
 
-    class Meta:
-        managed = False
-        db_table = 'cell_line_tfs'
-        unique_together = (('cell_line', 'tf'),)
+    # class Meta:
+    #     managed = False
+    #     db_table = 'cell_line_tfs'
+    #     unique_together = (('cell_line', 'tf'),)
 
 
 class DjangoAdminLog(models.Model):
@@ -235,7 +235,6 @@ class Hepg2Null(models.Model):
     tail_1000 = models.FloatField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'hepg2_null'
         unique_together = (('tf1', 'tf2', 'max_distance'),)
 
@@ -255,16 +254,21 @@ class Hepg2Temp(models.Model):
 class EncodeFormModel(models.Model):
     cell = models.CharField(max_length=20)
     method = models.CharField(max_length=20)
-    tf1 = models.CharField(choices=[("", "")], max_length=20)
-    tf2 = models.CharField(choices=[("", "")], max_length=20)
+    tf1 = models.CharField(choices=[("", "")], max_length=20,
+                           help_text='<p style="color:grey;font-size:80%;">You can select multiple TFs at a time by clicking and dragging on the list.</p>')
+    tf2 = models.CharField(choices=[("", "")], max_length=20,
+                           help_text='<p style="color:grey;font-size:80%;">You can select multiple TFs at a time by clicking and dragging on the list.</p>')
+
     max_dist = models.IntegerField(choices=MAX_DISTANCES, default=1,
-                                   help_text='Maximum distance allowed for mindist couples, measured in bps.')
-    num_min = models.IntegerField(help_text='Minimum number of mindist couples required to accept a candidate.')
+                                   help_text='<p style="color:grey;font-size:80%;"> Maximum distance allowed for mindist couples, measured in bps.</p>')
+    num_min = models.IntegerField(help_text='<p style="color:grey;font-size:80%;">Minimum number of mindist couples required to accept a candidate.</p>')
     num_min_w_tsses = models.DecimalField(max_digits=5, decimal_places=2, blank=True,
-                                          help_text='Minimum fraction of mindist couples which must colocate in a promoter.')
-    which_tests = models.CharField(max_length=20, choices=TESTS, blank=False, null=False, default=1)
-    min_test_num = models.IntegerField(help_text='Minimum number of rejected null hypothesis (from the above) required to accept a candidate.')
-    pvalue = models.IntegerField(choices=P_VALUES, default=1)
+                                          help_text='<p style="color:grey;font-size:80%;">Minimum fraction of mindist couples which must colocate in a promoter.</p>')
+    which_tests = models.CharField(max_length=20, choices=TESTS, blank=False, null=False, default=1,
+                                   help_text='<p style="color:grey;font-size:80%;">You can select multiple statistics.</p>')
+    min_test_num = models.IntegerField(help_text='<p style="color:grey;font-size:80%;">Minimum number of rejected null hypothesis (from the above) required to accept a candidate. Cannot be higher than the number of statistic selected.</p>')
+    pvalue = models.IntegerField(choices=P_VALUES, default=1,
+                                 help_text='<p style="color:grey;font-size:80%;">The selected p-value will be used for all statistics.</p>')
     session_id = models.CharField(max_length=100)
 
 

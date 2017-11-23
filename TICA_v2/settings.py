@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'TICA_v2.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tica',
+        'NAME': 'ticav5',
         'USER': 'tica',
         'PASSWORD': 'tica55555',  # Updated 20/11/2017, supposed to be temp
         'HOST': 'localhost', #ssh -L 5432:localhost:5432 tica@geco.deib.polimi.it

@@ -327,8 +327,9 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
     for (dir_path, dir_names, file_names) in walk(target_directory1):
         list_of_tf1.extend(file_names)
         break
-
-    print("List of tfs1:", list_of_tf1)
+    list_of_tf1 = sorted(list_of_tf1)
+    
+    #print("List of tfs1:", list_of_tf1)
 
     if is_same:
         list_of_tf2 = list_of_tf1
