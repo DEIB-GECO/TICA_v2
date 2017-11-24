@@ -374,7 +374,7 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
 
     count = 0
     # Start printing results
-    while not tasks.empty() and count < 50:
+    while not tasks.empty():
         try:
             ress = results.get(timeout=1)
             for res in ress:
