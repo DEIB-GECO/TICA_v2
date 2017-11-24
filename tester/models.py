@@ -135,10 +135,10 @@ class CellLineNull(models.Model):
     tail_10 = models.FloatField(blank=True, null=True)
     tail_1000 = models.FloatField(blank=True, null=True)
 
-    # class Meta:
-    #     managed = False
-    #     db_table = 'cell_line_null'
-    #     unique_together = (('cell_line', 'tf1', 'tf2', 'max_distance'),)
+    class Meta:
+        # managed = False
+        # db_table = 'cell_line_null'
+        unique_together = ('cell_line', 'tf1', 'tf2', 'max_distance',)
 
 
 class CellLineTfs(models.Model):
@@ -149,10 +149,11 @@ class CellLineTfs(models.Model):
     def __str__(self):
         return '%s_%s_%s' % (self.cell_line, self.tf, self.use_in_null)
 
-    # class Meta:
-    #     managed = False
-    #     db_table = 'cell_line_tfs'
-    #     unique_together = (('cell_line', 'tf'),)
+    class Meta:
+        # managed = False
+        # db_table = 'cell_line_tfs'
+        unique_together = ('cell_line', 'tf',)
+        unique_together = ('cell_line', 'tf',)
 
 
 class DjangoAdminLog(models.Model):

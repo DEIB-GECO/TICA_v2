@@ -6,6 +6,9 @@ from os import walk
 from queue import Empty
 
 from tester.models import *
+import logging
+
+logger = logging.getLogger(__name__)
 
 # definitions
 
@@ -161,20 +164,21 @@ class Consumer(multiprocessing.Process):
         # print('%s' % process_name)
         while True:
             next_task = self.task_queue.get()
+            logger.debug("(%s)This task = %s" % (process_name, next_task))
             if next_task is None:
                 # Poison pill means shutdown
-                # print('%s: Exiting' % process_name)
                 self.task_queue.task_done()
                 break
-            # print('%s: %s' % (process_name, next_task))
+            # logger.debug('%s: %s' % (process_name, next_task))
             answer = next_task(tfs, self.session_id, self.max_distances, self.directory1, self.directory2)
-            self.task_queue.task_done()
             self.result_queue.put(answer)
+            self.task_queue.task_done()
+        logger.debug('%s: Exiting' % process_name)
         return
 
 
 def read(tf, directory):
-    # print("READ: ", target_directory + tf)
+    # logger.debug("READ: ", target_directory + tf)
     temp_tf = defaultdict(list)
     for line in open(directory + tf):
         s = line.strip().split("\t")
@@ -293,7 +297,7 @@ class Task(object):
 
             # TODO other tails
 
-            # print("RESULT:\t\t\t\t\t", self.session_id, tf1, tf2, res)
+            # logger.debug("RESULT:\t\t\t\t\t", self.session_id, tf1, tf2, res)
         return results
 
 
@@ -312,7 +316,8 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
 
     max_distances = sorted(max_distances, reverse=True)
 
-    print(AnalysisResults.objects.count())
+    logger.debug("AnalysisResults.objects.count(): %s" % AnalysisResults.objects.count())
+    logger.debug("CellLineNull.objects.count(): %s" % CellLineNull.objects.count())
 
     is_same = (target_directory1 == target_directory2)
 
@@ -328,8 +333,8 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
         list_of_tf1.extend(file_names)
         break
     list_of_tf1 = sorted(list_of_tf1)
-    
-    #print("List of tfs1:", list_of_tf1)
+
+    # logger.debug("List of tfs1:", list_of_tf1)
 
     if is_same:
         list_of_tf2 = list_of_tf1
@@ -339,7 +344,7 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
             list_of_tf2.extend(file_names)
             break
 
-    print("List of tfs2:", list_of_tf2)
+    logger.debug("List of tfs2: " + str(list_of_tf2))
 
     # Establish communication queues
     tasks = multiprocessing.JoinableQueue()
@@ -347,7 +352,7 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
 
     # Start consumers
     num_consumers = min(MAX_CPU, int(multiprocessing.cpu_count()))
-    print('Creating %d consumers' % num_consumers)
+    logger.debug('Creating %d consumers' % num_consumers)
     consumers = [Consumer(tasks, results, session_id, max_distances, target_directory1, target_directory2) for i in range(num_consumers)]
     # consumers = [Consumer(tasks, results)]
 
@@ -360,35 +365,36 @@ def compute_min_distance(session_id, target_directory1='ciao/', target_directory
         traverse = filter(lambda x: x[0] < x[1], traverse)
     for (tf1, tf2) in traverse:
         tasks.put(Task(tf1, tf2))
-    print("all tasks added")
+    logger.debug("all tasks added")
 
     # Add a poison pill for each consumer
     for i in range(len(consumers)):
         tasks.put(None)
-    print("all poisons added")
+    logger.debug("all poisons added")
 
     count = 0
     # Start printing results
-    while not tasks.empty():
+    while not tasks.empty() and count < 50:
         try:
             ress = results.get(timeout=1)
             for res in ress:
                 save_to_db(session_id, res, is_same)
             count += 1
-            print('\t\t\tA Count: ', count, ' - Result:', ress)
+            logger.debug(' '.join(['\t\t\tA Count: ', str(count)]))
+            # logger.debug( ' '.join(['\t\t\tA Count: ', count, ' - Result:', ress]))
         except Empty:
-            # print ('##timeout##')
+            logger.debug('##timeout##')
             pass
     # Wait for all of the tasks to finish
     tasks.join()
-
+    logger.debug("JOINED")
     # Start printing results
     while not results.empty():
         ress = results.get()
         for res in ress:
             save_to_db(session_id, res, is_same)
         count += 1
-        print('\t\t\tB Count: ', count, ' - Result:', ress)
+        logger.debug(' '.join(['\t\t\tB Count: ', str(count)]))
 
 
 def save_to_db(session_id, value_dict, is_same):
