@@ -11,8 +11,8 @@ def pipeline_controller(session_id, method='mydata_mydata', cell=''):
         res = MyDataEncodeFormModel.objects.filter(session_id=session_id).first()
 
         input_zip = res.mydata.path
-        encode_folder = 'media/encode/'
-        tss_file = 'media/active_tsses.bed'
+        encode_folder = 'media/encode/%s/' % cell
+        tss_file = 'media/encode/tss/%s.gdm' % cell
         temp_folder = 'media/temp/%s/' % session_id
 
         # connections.close_all()

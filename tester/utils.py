@@ -41,7 +41,7 @@ def calculate_null(cell='hepg2'):
             nullpds = {}
             percs = [1, 5, 10, 20]
             for max_distance in max_distances:
-                temp = nullpd[nullpd['max_distance'] == max_distance].drop(['cell_line_id', 'tf1', 'tf2', 'max_distance'
+                temp = nullpd[nullpd['max_distance'] == max_distance].drop(['id', 'cell_line', 'tf1', 'tf2', 'max_distance'
                                                                             # ,'cumulative_count_all','cumulative_count_tss'
                                                                             ], axis=1)
                 # temp = temp.sample(bootsrapt_size, replace=True)
