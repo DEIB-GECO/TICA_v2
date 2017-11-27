@@ -39,12 +39,11 @@ def param_input(request):
                                    initial={'max_dist': 2200,
                                             'num_min': 1,
                                             'num_min_w_tsses': 0.01,
-                                            'min_test_num': 3})
+                                            'min_test_num': 3,
+                                            'which_tests': ['average', 'mad', 'median', 'tail_1000'],
+                                            })
     elif method == 'mydata_encode' or method == 'mydata_mydata':
-        form = MyDataEncodeParameterForm(initial={'max_dist': 2200,
-                                            'num_min': 1,
-                                            'num_min_w_tsses': 0.01,
-                                            'min_test_num': 3})
+        form = MyDataEncodeParameterForm()
         form.set_initial_values(cell, method, create_session_id(request))
 
 
@@ -208,7 +207,13 @@ def back_to_session(request):
         session = session.first()
         cell  = session.cell
         method  = session.method
-        form = EncodeParameterForm(cell, method)
+        form = EncodeParameterForm(cell, method,
+                                   initial={'max_dist': 2200,
+                                            'num_min': 1,
+                                            'num_min_w_tsses': 0.01,
+                                            'min_test_num': 3,
+                                            'which_tests': ['average', 'mad', 'median', 'tail_1000'],
+                                            })
         list_tf1 = sorted(list(AnalysisResults.objects.filter(
             session_id=session_id).values_list('tf1', flat=True).distinct()))
         list_tf2 = sorted(list(AnalysisResults.objects.filter(
