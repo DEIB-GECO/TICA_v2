@@ -4,6 +4,7 @@ from tester.min_dist import compute_min_distance
 from tester.models import MyDataEncodeFormModel
 from tester.pipeline_steps import *
 import logging
+import datetime
 
 
 def pipeline_controller(session_id, method='mydata_mydata', cell=''):
@@ -15,6 +16,8 @@ def pipeline_controller(session_id, method='mydata_mydata', cell=''):
         tss_file = 'media/encode/tss/%s.gdm' % cell
         temp_folder = 'media/temp/%s/' % session_id
 
+        timefile = open('%s/mytimings.txt' % temp_folder, 'w')
+
         # connections.close_all()
 
         unzipped_folder = '%s/unzipped/' % temp_folder
@@ -23,6 +26,8 @@ def pipeline_controller(session_id, method='mydata_mydata', cell=''):
 
         tfs = data_uploader(input_zip, target_folder=unzipped_folder)
 
+        pre_time = datetime.datetime.now()
+        # timefile.write('PROCESS_START;%s\n' % datetime.datetime.now().time())
         your_data = pygmql.load_from_path(
             local_path=unzipped_folder,
             parser=pygmql.parsers.NarrowPeakParser())
@@ -30,6 +35,7 @@ def pipeline_controller(session_id, method='mydata_mydata', cell=''):
         your_signals = tfbs_filter(your_data, tfs)
         # tfs are scrambled
         your_signals.materialize(tfbs_folder)
+        timefile.write('TFBS_Q_DONE: %s min\n' % ((datetime.datetime.now() - pre_time).total_seconds() / 60))
         materialized_files = ['%s/exp/%s' % (tfbs_folder, item)
                               for item in list(os.walk(tfbs_folder))[-1][2]
                               if not item.startswith('.')
@@ -42,13 +48,19 @@ def pipeline_controller(session_id, method='mydata_mydata', cell=''):
                and '.meta' in item]
         print(tfs)
         os.makedirs(tfbs_to_tss_maps_folder, exist_ok=True)
+
+        pre_time = datetime.datetime.now()
         your_maps = tfbs2tss_mapper(materialized_files, tfs, tss_file,
                                     target_folder=tfbs_to_tss_maps_folder)
+        timefile.write('MAPS_DONE: %s min\n' % ((datetime.datetime.now() - pre_time).total_seconds() / 60))
 
+        pre_time = datetime.datetime.now()
         if method == 'mydata_mydata':
             compute_min_distance(session_id, tfbs_to_tss_maps_folder, tfbs_to_tss_maps_folder)
         else:
             compute_min_distance(session_id, tfbs_to_tss_maps_folder, encode_folder)
+        timefile.write('MINDIST_DONE: %s min\n' % ((datetime.datetime.now() - pre_time).total_seconds() / 60))
+        timefile.close()
 
         res.upload_status = "SUCCESS"
         res.save()
