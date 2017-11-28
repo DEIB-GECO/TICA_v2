@@ -126,6 +126,8 @@ def test_results_encode(request):
     class NameTable(tables.Table):
         name_tf1 = tables.Column()
         name_tf2 = tables.Column()
+        couples = tables.Column()
+        couples_tss = tables.Column()
         average = tables.Column()
         average_passed = tables.Column()
         median = tables.Column()

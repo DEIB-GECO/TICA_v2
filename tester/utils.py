@@ -90,28 +90,26 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
 
         line_null_dict = model_to_dict(line_null)
 
-        if (line_null.cumulative_count_all <= min_count):
-            continue
-        if (line_null.cumulative_count_tss / line_null.cumulative_count_all < min_tss):
-            continue
-
         # start stat testing
         passed = []
-        scores = {'name_tf1': tf1, 'name_tf2': tf2}
+        scores = {'name_tf1': tf1,
+                  'name_tf2': tf2,
+                  "couples": line_null.cumulative_count_all,
+                  "couples_tss": line_null.cumulative_count_tss / line_null.cumulative_count_all}
+        if (line_null.cumulative_count_all >= min_count) and (line_null.cumulative_count_tss / line_null.cumulative_count_all >= min_tss):
 
-        for i in test_list:
-            test_name = i + "-" + str(p_value)
-            null_value = temp_null[test_name]
-            if line_null_dict[i] is not None and line_null_dict[i] <= null_value:
-                passed.append(i)
-                scores[i + "_passed"] = "Passed"
-            else:
-                scores[i + "_passed"] = "Failed"
-            scores[i] = line_null_dict[i]
+            for i in test_list:
+                test_name = i + "-" + str(p_value)
+                null_value = temp_null[test_name]
+                if line_null_dict[i] is not None and line_null_dict[i] <= null_value:
+                    passed.append(i)
+                    scores[i + "_passed"] = "Passed"
+                else:
+                    scores[i + "_passed"] = "Failed"
+                scores[i] = line_null_dict[i]
 
         scores['num_passed'] = len(passed)
-        if (min_num_true_test <= len(passed)):
-            pass
+
         result.append(scores)
 
     return result
