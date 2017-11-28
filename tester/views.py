@@ -95,7 +95,7 @@ def test_results_mydata_encode(request):
             print("\n\n\n\n NOT VALID:", form.errors, "\n\n\n\n")
 
     context = {
-        'my_path': request.get_host() + "/tester/back_to_session/",
+        'my_path': request.get_host() + "/tica/back_to_session/",
         'session_id': session_id
     }
     return render(request, 'tester/upload_response.html', context=context)
