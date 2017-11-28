@@ -1,96 +1,102 @@
 {% extends "tester/base.html" %}
 {% load bootstrap4 %}
+{% load django_tables2 %}
 
-{% load render_table from django_tables2 %}
+
 {% load static %}
 
 {% block content_header %}
-<h1>TICA - Results</h1>
-<p>Analysis complete. Please review results below.</p>
-<p>Testing on
-    {% for t in tf1 %}
-    <i>{{t}}</i>
-    {% endfor %}
-    vs.
-    {% for t in tf2 %}
-    <i>{{t}}</i>
-    {% endfor %}
-    on cell line {{ cell }} returned the following results:<br>
-<ul>
-    <li>Max_distance: {{ maxdist }}</li>
-    <li>Minimum number of couples: {{ num_min }}</li>
-    <li>Minimum number of couples with TSSes: {{ num_min_w_tsses }}</li>
-    <li>Minimum number of mindist couples: {{ num_min }}</li>
-    <li>Minimum fraction of mindist couples colocating in a promoter: {{ num_min_w_tsses }}</li>
-    <li>Max_distance: {{ maxdist }}</li>
-    <li>Tests done: {{ which_tests }}</li>
-    <li>p value of individual tests: {{ p_value }}</li>
-    <li>Number of rejects needed: {{ min_test_num }}</li>
-</ul>
+    <h1>TICA - Results</h1>
+    <p>Analysis complete. Please review results below.</p>
+    <p>Testing on
+        {% for t in tf1 %}
+            <i>{{ t }}</i>
+        {% endfor %}
+        vs.
+        {% for t in tf2 %}
+            <i>{{ t }}</i>
+        {% endfor %}
+        on cell line {{ cell }} returned the following results:<br>
+    <ul>
+        <li>Max_distance: {{ maxdist }}</li>
+        <li>Minimum number of couples: {{ num_min }}</li>
+        <li>Minimum number of couples with TSSes: {{ num_min_w_tsses }}</li>
+        <li>Minimum number of mindist couples: {{ num_min }}</li>
+        <li>Minimum fraction of mindist couples colocating in a promoter: {{ num_min_w_tsses }}</li>
+        <li>Max_distance: {{ maxdist }}</li>
+        <li>Tests done: {{ which_tests }}</li>
+        <li>p value of individual tests: {{ p_value }}</li>
+        <li>Number of rejects needed: {{ min_test_num }}</li>
+    </ul>
 
 {% endblock %}
 
 {% block content_body %}
-<center>
-    {% render_table table %}
-
-    <canvas id="sampleChart"></canvas>
-
-    <script>
-(function(){
-  function clone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
-
-  function ctx(elementId){
-    return document.getElementById(elementId).getContext('2d');
-  }
-
-{#    var colorTestColors = [ "rgba(220,220,220,0.9)", "rgba(151,187,205,0.9)"];#}
+    <div style="float: right "><a href="{% querystring '_export'='csv' %}">Export as CSV</a></div>
 
 
-  // completely arbitrary data
-  var sampleData = {{heatmap|safe}};
-
-  var sampleChart = new Chart(ctx('sampleChart')).HeatMap(sampleData, {
-      responsive: true,
-      rounded: false,
-{#      colors: colorTestColors,#}
-{#        colorInterpolation: 'gradient',#}
-  });
+    <center>
 
 
-  var tooltipOptionsChart = new Chart(ctx('tooltipOptionsChart'))
-    .HeatMap(sampleData, {
-        responsive: true,
-        tooltipTemplate: "xLabel: <%= xLabel %> | yLabel: <%= yLabel %> | value: <%= value %>",
-        colors: colorTestColors,
-        colorInterpolation: 'gradient',
-      });
+        {% render_table table %}
 
-  var gradientChart = new Chart(ctx('gradientChart'))
-    .HeatMap(sampleData, {
-      responsive: true,
-      colors: colorTestColors,
-      colorInterpolation: 'gradient',
-      showLabels: false
-    });
+        <canvas id="sampleChart"></canvas>
 
-  var paletteChart = new Chart(ctx('paletteChart'))
-    .HeatMap(sampleData, {
-      responsive: true,
-      colors: colorTestColors,
-      colorInterpolation: 'palette',
-      showLabels: false
-    });
+        <script>
+            (function () {
+                function clone(obj) {
+                    return JSON.parse(JSON.stringify(obj));
+                }
 
-  var scrollChart = new Chart(ctx('scrollChart')).HeatMap(sampleData, {responsive: false});
+                function ctx(elementId) {
+                    return document.getElementById(elementId).getContext('2d');
+                }
+
+                {#    var colorTestColors = [ "rgba(220,220,220,0.9)", "rgba(151,187,205,0.9)"];#}
 
 
-})();
+                // completely arbitrary data
+                var sampleData = {{heatmap|safe}};
 
-    </script>
-</center>
+                var sampleChart = new Chart(ctx('sampleChart')).HeatMap(sampleData, {
+                    responsive: true,
+                    rounded: false,
+                    {#      colors: colorTestColors,#}
+                    {#        colorInterpolation: 'gradient',#}
+                });
+
+
+                var tooltipOptionsChart = new Chart(ctx('tooltipOptionsChart'))
+                    .HeatMap(sampleData, {
+                        responsive: true,
+                        tooltipTemplate: "xLabel: <%= xLabel %> | yLabel: <%= yLabel %> | value: <%= value %>",
+                        colors: colorTestColors,
+                        colorInterpolation: 'gradient',
+                    });
+
+                var gradientChart = new Chart(ctx('gradientChart'))
+                    .HeatMap(sampleData, {
+                        responsive: true,
+                        colors: colorTestColors,
+                        colorInterpolation: 'gradient',
+                        showLabels: false
+                    });
+
+                var paletteChart = new Chart(ctx('paletteChart'))
+                    .HeatMap(sampleData, {
+                        responsive: true,
+                        colors: colorTestColors,
+                        colorInterpolation: 'palette',
+                        showLabels: false
+                    });
+
+                var scrollChart = new Chart(ctx('scrollChart')).HeatMap(sampleData, {responsive: false});
+
+
+            })();
+
+        </script>
+    </center>
 {% endblock %}
 
 

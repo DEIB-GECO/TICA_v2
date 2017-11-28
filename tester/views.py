@@ -6,6 +6,8 @@ import django_tables2 as tables
 from django.db import connections
 from django.shortcuts import render
 from django_tables2 import RequestConfig
+from django_tables2.export.views import ExportMixin
+
 
 import tester.utils as utils
 from tester.pipeline_controller import pipeline_controller
@@ -45,7 +47,6 @@ def param_input(request):
     elif method == 'mydata_encode' or method == 'mydata_mydata':
         form = MyDataEncodeParameterForm()
         form.set_initial_values(cell, method, create_session_id(request))
-
 
     context = {
         'form': form,
@@ -94,8 +95,8 @@ def test_results_mydata_encode(request):
             print("\n\n\n\n NOT VALID:", form.errors, "\n\n\n\n")
 
     context = {
-        'my_path' : request.get_host() + "/tester/back_to_session/",
-        'session_id' : session_id
+        'my_path': request.get_host() + "/tester/back_to_session/",
+        'session_id': session_id
     }
     return render(request, 'tester/upload_response.html', context=context)
 
@@ -138,7 +139,6 @@ def test_results_encode(request):
             exclude = not_shown
             attrs = {'class': 'paleblue'}
 
-
     analysis_results = utils.check_tf2(cell,
                                        tf1,
                                        tf2,
@@ -148,9 +148,7 @@ def test_results_encode(request):
                                        num_min,
                                        pvalue,
                                        min_test_num,
-                                       wanted_tests,method,session_id)
-
-
+                                       wanted_tests, method, session_id)
 
     table = NameTable(analysis_results)
 
@@ -184,6 +182,13 @@ def test_results_encode(request):
         'heatmap': data_json,
     }
 
+    from django_tables2.export.export import TableExport
+
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
+
     return render(request, 'tester/test_results.html', context)
 
 
@@ -192,21 +197,21 @@ def back_to_session(request):
 
     session = MyDataEncodeFormModel.objects.filter(session_id=session_id)
 
-    context = {'session_id' : session_id}
+    context = {'session_id': session_id}
 
     if not session:
         context['message'] = "Your session was not found :-("
     elif session.count() > 1:
         context['message'] = "Something went wrong, sorry :-( "
     elif session.first().upload_status == 'PENDING':
-        context['message'] = "Still processing your file. "  + \
-                  "Please come back in a few minutes."
+        context['message'] = "Still processing your file. " + \
+                             "Please come back in a few minutes."
     elif session.first().upload_status == 'FAIL':
         context['message'] = "Something went wrong while processing you file :-("
     else:
         session = session.first()
-        cell  = session.cell
-        method  = session.method
+        cell = session.cell
+        method = session.method
         form = EncodeParameterForm(cell, method,
                                    initial={'max_dist': 2200,
                                             'num_min': 1,
@@ -225,5 +230,3 @@ def back_to_session(request):
         context['http_method'] = 'get'
 
     return render(request, 'tester/user_session.html', context)
-
-

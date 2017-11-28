@@ -1,10 +1,9 @@
-import pandas as pd
-import numpy as np
+import logging
 import os
 
-import logging
+import numpy as np
+import pandas as pd
 from django.forms.models import model_to_dict
-from django.db.models import Q
 
 from tester.models import *
 
@@ -72,7 +71,7 @@ def get_tf_list(cell='hepg2'):
     return staticCache['get_tf_list-' + cell]
 
 
-def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_value, min_num_true_test, test_list, method='encode',session_id=None):
+def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_value, min_num_true_test, test_list, method='encode', session_id=None):
     temp_null = calculate_null(cell)[maxd]
     result = []
     if method == 'encode':
@@ -80,8 +79,7 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
     else:
         null_lines = AnalysisResults.objects.filter(session_id=session_id)
 
-
-    null_lines = null_lines.filter(tf1__in=tf1_list).filter(tf2__in=tf2_list).filter(max_distance=maxd)
+    null_lines = null_lines.filter(tf1__in=tf1_list).filter(tf2__in=tf2_list).filter(max_distance=maxd).order_by('tf1', 'tf2')
 
     print(null_lines.query)
 
