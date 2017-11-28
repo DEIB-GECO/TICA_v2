@@ -15,6 +15,7 @@ def pipeline_controller(session_id, method='mydata_mydata', cell=''):
         encode_folder = 'media/encode/%s/' % cell
         tss_file = 'media/encode/tss/%s.gdm' % cell
         temp_folder = 'media/temp/%s/' % session_id
+        os.makedirs(temp_folder)
 
         timefile = open('%s/mytimings.txt' % temp_folder, 'w')
 
