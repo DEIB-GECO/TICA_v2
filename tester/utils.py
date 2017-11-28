@@ -91,12 +91,19 @@ def check_tf2(cell, tf1_list, tf2_list, maxd, tail_size, min_tss, min_count, p_v
         line_null_dict = model_to_dict(line_null)
 
         # start stat testing
+
+
         passed = []
         scores = {'name_tf1': tf1,
                   'name_tf2': tf2,
-                  "couples": line_null.cumulative_count_all,
-                  "couples_tss": line_null.cumulative_count_tss / line_null.cumulative_count_all}
-        if (line_null.cumulative_count_all >= min_count) and (line_null.cumulative_count_tss / line_null.cumulative_count_all >= min_tss):
+                  "couples": line_null.cumulative_count_all}
+
+        tss_fraction = 0
+        if line_null.cumulative_count_all != 0:
+            tss_fraction = line_null.cumulative_count_tss / line_null.cumulative_count_all
+        scores["couples_tss"] = tss_fraction
+
+        if (line_null.cumulative_count_all >= min_count) and (tss_fraction >= min_tss):
 
             for i in test_list:
                 test_name = i + "-" + str(p_value)
